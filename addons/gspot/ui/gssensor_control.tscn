@@ -1,0 +1,79 @@
+[gd_scene load_steps=4 format=3 uid="uid://ws8awmauqh54"]
+
+[ext_resource type="Theme" uid="uid://cnuol0ry2vobn" path="res://addons/gspot/assets/gspot_theme.tres" id="1_j7t5d"]
+[ext_resource type="Script" path="res://addons/gspot/ui/gssensor_control.gd" id="2_2jg4r"]
+[ext_resource type="LabelSettings" uid="uid://cyuy5onflhliv" path="res://addons/gspot/assets/shadowed_label.tres" id="3_ljh3s"]
+
+[node name="GSSensorControl" type="GridContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_j7t5d")
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2
+script = ExtResource("2_2jg4r")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
+text = "Sensor Type"
+label_settings = ExtResource("3_ljh3s")
+vertical_alignment = 1
+
+[node name="SensorType" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+label_settings = ExtResource("3_ljh3s")
+vertical_alignment = 1
+
+[node name="Label2" type="Label" parent="."]
+layout_mode = 2
+text = "Index"
+label_settings = ExtResource("3_ljh3s")
+vertical_alignment = 1
+
+[node name="Index" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+label_settings = ExtResource("3_ljh3s")
+vertical_alignment = 1
+
+[node name="Label3" type="Label" parent="."]
+layout_mode = 2
+text = "Value"
+label_settings = ExtResource("3_ljh3s")
+vertical_alignment = 1
+
+[node name="Value" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+label_settings = ExtResource("3_ljh3s")
+vertical_alignment = 1
+
+[node name="Label4" type="Label" parent="."]
+layout_mode = 2
+label_settings = ExtResource("3_ljh3s")
+vertical_alignment = 1
+
+[node name="ReadSensor" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Read Sensor"
+
+[node name="Subscribe" type="Button" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Subscribe"
+
+[node name="Unsubscribe" type="Button" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Unsubscribe"
+
+[connection signal="pressed" from="ReadSensor" to="." method="_on_read_sensor_pressed"]
+[connection signal="pressed" from="Subscribe" to="." method="_on_subscribe_pressed"]
+[connection signal="pressed" from="Unsubscribe" to="." method="_on_unsubscribe_pressed"]

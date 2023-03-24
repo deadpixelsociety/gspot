@@ -11,8 +11,13 @@ config_version=5
 [application]
 
 config/name="gspot"
+run/main_scene="res://addons/gspot/ui/gscontrol_panel.tscn"
 config/features=PackedStringArray("4.0", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gspot/plugin.cfg")
 
 [rendering]
 

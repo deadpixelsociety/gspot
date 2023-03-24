@@ -1,0 +1,198 @@
+[gd_scene load_steps=6 format=3 uid="uid://prwyw8cdhaos"]
+
+[ext_resource type="Script" path="res://addons/gspot/ui/gscontrol_panel.gd" id="1_ahhjr"]
+[ext_resource type="Theme" uid="uid://cnuol0ry2vobn" path="res://addons/gspot/assets/gspot_theme.tres" id="1_oj7qg"]
+[ext_resource type="Script" path="res://addons/gspot/gsclient.gd" id="2_qb78c"]
+[ext_resource type="LabelSettings" uid="uid://cyuy5onflhliv" path="res://addons/gspot/assets/shadowed_label.tres" id="4_71pte"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_qplhf"]
+font_size = 48
+shadow_size = 4
+shadow_color = Color(0, 0, 0, 0.25098)
+shadow_offset = Vector2(4, 4)
+
+[node name="GSControlPanel" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_oj7qg")
+script = ExtResource("1_ahhjr")
+
+[node name="GSClient" type="Node" parent="."]
+script = ExtResource("2_qb78c")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 32
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+text = "GSClient"
+label_settings = SubResource("LabelSettings_qplhf")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ServerConnection" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/ServerConnection"]
+layout_mode = 2
+text = "Server"
+label_settings = ExtResource("4_71pte")
+vertical_alignment = 1
+
+[node name="Hostname" type="LineEdit" parent="MarginContainer/VBoxContainer/ServerConnection"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(256, 0)
+layout_mode = 2
+text = "localhost"
+placeholder_text = "Hostname"
+select_all_on_focus = true
+
+[node name="Label2" type="Label" parent="MarginContainer/VBoxContainer/ServerConnection"]
+layout_mode = 2
+text = ":"
+label_settings = ExtResource("4_71pte")
+vertical_alignment = 1
+
+[node name="Port" type="SpinBox" parent="MarginContainer/VBoxContainer/ServerConnection"]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 65536.0
+value = 12345.0
+
+[node name="Connect" type="Button" parent="MarginContainer/VBoxContainer/ServerConnection"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+text = "Connect"
+
+[node name="Disconnect" type="Button" parent="MarginContainer/VBoxContainer/ServerConnection"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+text = "Disconnect"
+
+[node name="DeviceControl" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RequestDeviceList" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+text = "Request Device List"
+
+[node name="StartScan" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+text = "Start Scan"
+
+[node name="StopScan" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+text = "Stop Scan"
+
+[node name="StopDevice" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+text = "Stop Device"
+
+[node name="StopAllDevices" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+text = "Stop All Devices"
+
+[node name="DeviceContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 32
+
+[node name="DeviceList" type="ItemList" parent="MarginContainer/VBoxContainer/DeviceContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScalarScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer/DeviceContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScalarContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/DeviceContainer/ScalarScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="LinearScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer/DeviceContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LinearContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/DeviceContainer/LinearScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="RotationScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer/DeviceContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RotationContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/DeviceContainer/RotationScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SensorScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer/DeviceContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SensorContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/DeviceContainer/SensorScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="LogLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Client Log"
+label_settings = ExtResource("4_71pte")
+vertical_alignment = 1
+
+[node name="Log" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_vertical = 8
+bbcode_enabled = true
+scroll_following = true
+
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ServerConnection/Connect" to="." method="_on_connect_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ServerConnection/Disconnect" to="." method="_on_disconnect_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/DeviceControl/RequestDeviceList" to="." method="_on_request_device_list_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/DeviceControl/StartScan" to="." method="_on_start_scan_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/DeviceControl/StopScan" to="." method="_on_stop_scan_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/DeviceControl/StopDevice" to="." method="_on_stop_device_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/DeviceControl/StopAllDevices" to="." method="_on_stop_all_devices_pressed"]
+[connection signal="item_clicked" from="MarginContainer/VBoxContainer/DeviceContainer/DeviceList" to="." method="_on_device_list_item_clicked"]
