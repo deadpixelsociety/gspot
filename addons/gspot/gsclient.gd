@@ -24,41 +24,69 @@ enum ErrorCode {
 }
 
 signal client_connection_changed(connected)
-signal client_error(error, message)
-signal client_message(message)
-signal client_frame_received(frame)
-signal client_scan_finished()
-signal client_device_list_received(devices)
 signal client_device_added(device)
+signal client_device_list_received(devices)
 signal client_device_removed(device)
-signal client_sensor_reading(id, device_index, sensor_index, sensor_type, data)
+signal client_error(error, message)
+signal client_frame_received(frame)
+signal client_message(message)
 signal client_raw_reading(id, device_index, endpoint, data)
+signal client_scan_finished()
+signal client_sensor_reading(id, device_index, sensor_index, sensor_type, data)
 signal server_error(id, error, message)
+
+var _hostname: String
+var _port: int
+var _server_name: String
+var _message_version: int
+var _max_ping_time: int
 
 var _ack_map: Dictionary = {}
 var _device_map: Dictionary = {}
 var _id: int = 1
+var _message_handlers: Dictionary = {}
 var _peer: WebSocketPeer = WebSocketPeer.new()
+var _ping: float = 0.0
 var _scanning: bool = false
 var _state: ClientState = ClientState.DISCONNECTED
 var _timeout: float = 0.0
 
 
+func _init() -> void:
+	add_message_handler(GSMessage.MESSAGE_TYPE_OK, _on_message_ok)
+	add_message_handler(GSMessage.MESSAGE_TYPE_ERROR, _on_message_error)
+	add_message_handler(GSMessage.MESSAGE_TYPE_SERVER_INFO, _on_message_server_info)
+	add_message_handler(GSMessage.MESSAGE_TYPE_DEVICE_LIST, _on_message_device_list)
+	add_message_handler(GSMessage.MESSAGE_TYPE_DEVICE_ADDED, _on_message_device_added)
+	add_message_handler(GSMessage.MESSAGE_TYPE_DEVICE_REMOVED, _on_message_device_removed)
+	add_message_handler(GSMessage.MESSAGE_TYPE_SCANNING_FINISHED, _on_message_scanning_finished)
+	add_message_handler(GSMessage.MESSAGE_TYPE_SENSOR_READING, _on_message_sensor_reading)
+	add_message_handler(GSMessage.MESSAGE_TYPE_RAW_READING, _on_message_raw_reading)
+
+
 func _process(delta: float) -> void:
-	_peer.poll()
-	match _peer.get_ready_state():
-		WebSocketPeer.STATE_CONNECTING:
-			_on_peer_connecting(delta)
-		WebSocketPeer.STATE_OPEN:
-			if _state == ClientState.CONNECTING:
-				_handshake()
-			_consume_peer_packets()
-		WebSocketPeer.STATE_CLOSING:
-			if _state == ClientState.CONNECTED:
-				_on_peer_closing()
-		WebSocketPeer.STATE_CLOSED:
-			if _state == ClientState.CONNECTED:
-				_on_peer_closed()
+	_check_ping(delta)
+	_process_peer(delta)
+
+
+func get_hostname() -> String:
+	return _hostname
+
+
+func get_port() -> int:
+	return _port
+
+
+func get_server_name() -> String:
+	return _server_name
+
+
+func get_message_version() -> int:
+	return _message_version
+
+
+func get_max_ping_time() -> int:
+	return _max_ping_time
 
 
 func get_client_state() -> ClientState:
@@ -69,12 +97,22 @@ func is_client_connected() -> bool:
 	return get_client_state() == ClientState.CONNECTED
 
 
-func start(server: String = "localhost", port: int = 12345, timeout: int = 60, options: TLSOptions = null) -> Error:
+func add_message_handler(message_type: String, handler: Callable):
+	_message_handlers[message_type] = handler
+
+
+func remove_message_handler(message_type: String) -> bool:
+	return _message_handlers.erase(message_type)
+
+
+func start(hostname: String = "localhost", port: int = 12345, timeout: int = 60, options: TLSOptions = null) -> Error:
 	client_message.emit("GSClient starting...")
-	client_message.emit("Attempting to connect to %s on port %d..." % [ server, port ])
+	client_message.emit("Attempting to connect to %s on port %d..." % [ hostname, port ])
 	var protocol = "ws" if not options else "wss"
+	_hostname = hostname
+	_port = port
 	_timeout = float(timeout)
-	var resp = _peer.connect_to_url("%s://%s:%d" % [ protocol, server, port ], options)
+	var resp = _peer.connect_to_url("%s://%s:%d" % [ protocol, hostname, port ], options)
 	if resp != OK:
 		client_error.emit(resp, "Unable to connect to server.")
 		set_process(false)
@@ -191,6 +229,32 @@ func send(message: GSMessage):
 	_peer.send_text(JSON.stringify([ message.serialize() ]))
 
 
+func _check_ping(delta: float):
+	if _max_ping_time <= 0.0:
+		return
+	_ping -= delta
+	if _ping <= 0.0:
+		_ping = float(_max_ping_time) / 1000.0
+		send(GSPing.new(_get_message_id()))
+
+
+func _process_peer(delta: float):
+	_peer.poll()
+	match _peer.get_ready_state():
+		WebSocketPeer.STATE_CONNECTING:
+			_on_peer_connecting(delta)
+		WebSocketPeer.STATE_OPEN:
+			if _state == ClientState.CONNECTING:
+				_handshake()
+			_consume_peer_packets()
+		WebSocketPeer.STATE_CLOSING:
+			if _state == ClientState.CONNECTED:
+				_on_peer_closing()
+		WebSocketPeer.STATE_CLOSED:
+			if _state == ClientState.CONNECTED:
+				_on_peer_closed()
+
+
 func _on_connect_timeout():
 	if _state == ClientState.CONNECTING:
 		set_process(false)
@@ -221,56 +285,87 @@ func _consume_peer_packets():
 			continue
 		for msg in data:
 			var message = GSMessage.deserialize(msg)
-			match message.message_type:
-				GSMessage.MESSAGE_TYPE_OK:
-					_ack(message.get_id())
-				GSMessage.MESSAGE_TYPE_ERROR:
-					_ack(message.get_id())
-					var error_code = message.fields[GSMessage.MESSAGE_FIELD_ERROR_CODE]
-					var error_message = message.fields[GSMessage.MESSAGE_FIELD_ERROR_MESSAGE]
-					server_error.emit(message.get_id(), error_code, error_message)
-				GSMessage.MESSAGE_TYPE_SERVER_INFO:
-					if _state == ClientState.HANDSHAKING:
-						_ack(1)
-						_state = ClientState.CONNECTED
-						var server_name = message.fields[GSMessage.MESSAGE_FIELD_SERVER_NAME]
-						client_message.emit("GSClient connected to %s!" % server_name)
-						client_connection_changed.emit(true)
-				GSMessage.MESSAGE_TYPE_DEVICE_LIST:
-					for device_data in message.fields[GSMessage.MESSAGE_FIELD_DEVICES]:
-						var device = GSDevice.deserialize(device_data)
-						_device_map[device.device_index] = device
-					client_device_list_received.emit(_device_map.values())
-				GSMessage.MESSAGE_TYPE_DEVICE_ADDED:
-					var device = GSDevice.deserialize(message.fields)
-					_device_map[device.device_index] = device
-					client_device_added.emit(device)
-				GSMessage.MESSAGE_TYPE_DEVICE_REMOVED:
-					var device_index = int(message.fields[GSMessage.MESSAGE_FIELD_DEVICE_INDEX])
-					if _device_map.has(device_index):
-						var device = _device_map[device_index]
-						_device_map.erase(device_index)
-						client_device_removed.emit(device)
-				GSMessage.MESSAGE_TYPE_SCANNING_FINISHED:
-					_scanning = false
-					client_scan_finished.emit()
-				GSMessage.MESSAGE_TYPE_SENSOR_READING:
-					_ack(message.get_id())
-					var id = message.get_id()
-					var device_index: int = message.fields[GSMessage.MESSAGE_FIELD_DEVICE_INDEX]
-					var sensor_index: int = message.fields[GSMessage.MESSAGE_FIELD_SENSOR_INDEX]
-					var sensor_type = message.fields[GSMessage.MESSAGE_FIELD_SENSOR_TYPE]
-					var sensor_data = message.fields[GSMessage.MESSAGE_FIELD_DATA]
-					client_sensor_reading.emit(id, device_index, sensor_index, sensor_type, sensor_data)
-				GSMessage.MESSAGE_TYPE_RAW_READING:
-					_ack(message.get_id())
-					var id = message.get_id()
-					var device_index: int = message.fields[GSMessage.MESSAGE_FIELD_DEVICE_INDEX]
-					var endpoint = message.fields[GSMessage.MESSAGE_FIELD_ENDPOINT]
-					var raw_data: PackedByteArray = message.fields[GSMessage.MESSAGE_FIELD_DATA]
-					client_raw_reading.emit(id, device_index, endpoint, raw_data)
-				_:
-					client_message.emit("Unrecognized message type: %s" % message.message_type)
+			_on_handle_message(message)
+
+
+func _on_message_ok(message: GSMessage):
+	_ack(message.get_id())
+
+
+func _on_message_error(message: GSMessage):
+	_ack(message.get_id())
+	var error_code = message.fields[GSMessage.MESSAGE_FIELD_ERROR_CODE]
+	var error_message = message.fields[GSMessage.MESSAGE_FIELD_ERROR_MESSAGE]
+	server_error.emit(message.get_id(), error_code, error_message)
+
+
+func _on_message_server_info(message: GSMessage):
+	if _state == ClientState.HANDSHAKING:
+		_ack(1)
+		_state = ClientState.CONNECTED
+		_server_name = message.fields[GSMessage.MESSAGE_FIELD_SERVER_NAME]
+		_message_version = int(message.fields[GSMessage.MESSAGE_FIELD_MESSAGE_VERSION])
+		_max_ping_time = int(message.fields[GSMessage.MESSAGE_FIELD_MAX_PING_TIME])
+		client_message.emit("GSClient connected to %s!" % _server_name)
+		client_connection_changed.emit(true)
+
+
+func _on_message_device_list(message: GSMessage):
+	_ack(message.get_id())
+	for device_data in message.fields[GSMessage.MESSAGE_FIELD_DEVICES]:
+		var device = GSDevice.deserialize(device_data)
+		_device_map[device.device_index] = device
+	client_device_list_received.emit(_device_map.values())
+
+
+func _on_message_device_added(message: GSMessage):
+	var device = GSDevice.deserialize(message.fields)
+	_device_map[device.device_index] = device
+	client_device_added.emit(device)
+
+
+func _on_message_device_removed(message: GSMessage):
+	var device_index = int(message.fields[GSMessage.MESSAGE_FIELD_DEVICE_INDEX])
+	if _device_map.has(device_index):
+		var device = _device_map[device_index]
+		_device_map.erase(device_index)
+		client_device_removed.emit(device)
+
+
+func _on_message_scanning_finished(message: GSMessage):
+	_scanning = false
+	client_scan_finished.emit()
+
+
+func _on_message_sensor_reading(message: GSMessage):
+	_ack(message.get_id())
+	var id = message.get_id()
+	var device_index: int = message.fields[GSMessage.MESSAGE_FIELD_DEVICE_INDEX]
+	var sensor_index: int = message.fields[GSMessage.MESSAGE_FIELD_SENSOR_INDEX]
+	var sensor_type = message.fields[GSMessage.MESSAGE_FIELD_SENSOR_TYPE]
+	var sensor_data = message.fields[GSMessage.MESSAGE_FIELD_DATA]
+	client_sensor_reading.emit(id, device_index, sensor_index, sensor_type, sensor_data)
+
+
+func _on_message_raw_reading(message: GSMessage):
+	_ack(message.get_id())
+	var id = message.get_id()
+	var device_index: int = message.fields[GSMessage.MESSAGE_FIELD_DEVICE_INDEX]
+	var endpoint = message.fields[GSMessage.MESSAGE_FIELD_ENDPOINT]
+	var raw_data: PackedByteArray = message.fields[GSMessage.MESSAGE_FIELD_DATA]
+	client_raw_reading.emit(id, device_index, endpoint, raw_data)
+
+
+func _on_handle_message(message: GSMessage):
+	if not _message_handlers.has(message.message_type):
+		_on_unhandled_message(message)
+		return
+	var handler = _message_handlers[message.message_type] as Callable
+	handler.call(message)
+
+
+func _on_unhandled_message(message: GSMessage):
+	client_message.emit("Unrecognized message type: %s" % message.message_type)
 
 
 func _ack(ack_id: int):

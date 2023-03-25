@@ -3,8 +3,8 @@ extends EditorPlugin
 
 
 func _enter_tree() -> void:
-	pass
+	add_custom_type("GSClient", "Node", preload("gsclient.gd"), preload("editor_icon.png"))
 
 
 func _exit_tree() -> void:
-	pass
+	remove_custom_type("GSClient")

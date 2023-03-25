@@ -94,30 +94,35 @@ theme_override_constants/separation = 8
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
+disabled = true
 text = "Request Device List"
 
 [node name="StartScan" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
+disabled = true
 text = "Start Scan"
 
 [node name="StopScan" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
+disabled = true
 text = "Stop Scan"
 
 [node name="StopDevice" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
+disabled = true
 text = "Stop Device"
 
 [node name="StopAllDevices" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
+disabled = true
 text = "Stop All Devices"
 
 [node name="DeviceContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]

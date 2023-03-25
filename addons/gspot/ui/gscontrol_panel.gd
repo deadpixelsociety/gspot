@@ -16,6 +16,8 @@ const SENSOR_CONTROL = preload("res://addons/gspot/ui/gssensor_control.tscn")
 @onready var _start_scan: Button = %StartScan
 @onready var _stop_scan: Button = %StopScan
 @onready var _device_list: ItemList = %DeviceList
+@onready var _stop_device: Button = %StopDevice
+@onready var _stop_all_devices: Button = %StopAllDevices
 @onready var _scalar_scroll: ScrollContainer = %ScalarScroll
 @onready var _linear_scroll: ScrollContainer = %LinearScroll
 @onready var _rotation_scroll: ScrollContainer = %RotationScroll
@@ -111,15 +113,29 @@ func _on_client_device_removed(device: GSDevice):
 
 func _on_client_connection_changed(connected: bool):
 	if _client.is_client_connected():
+		_hostname.editable = false
+		_port.editable = false
 		_connect.visible = false
 		_connect.disabled = true
 		_disconnect.visible = true
 		_disconnect.disabled = false
+		_request_device_list.disabled = false
+		_start_scan.disabled = false
+		_stop_scan.disabled = false
+		_stop_device.disabled = false
+		_stop_all_devices.disabled = false
 	else:
+		_hostname.editable = true
+		_port.editable = true
 		_connect.visible = true
 		_connect.disabled = false
 		_disconnect.visible = false
 		_disconnect.disabled = true
+		_request_device_list.disabled = true
+		_start_scan.disabled = true
+		_stop_scan.disabled = true
+		_stop_device.disabled = true
+		_stop_all_devices.disabled = true
 	_reset_devices()
 
 
@@ -139,6 +155,8 @@ func _on_connect_pressed() -> void:
 		OS.alert("Hostname is required.")
 	
 	_connect.disabled = true
+	_hostname.editable = false
+	_port.editable = false
 	_client.start(hostname, port)
 
 
