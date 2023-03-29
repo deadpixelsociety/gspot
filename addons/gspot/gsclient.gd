@@ -35,8 +35,8 @@ signal client_scan_finished()
 signal client_sensor_reading(id, device_index, sensor_index, sensor_type, data)
 signal server_error(id, error, message)
 
-var _hostname: String
-var _port: int
+var _hostname: String = "localhost"
+var _port: int = 12345
 var _server_name: String
 var _message_version: int
 var _max_ping_time: int
@@ -153,7 +153,10 @@ func get_device(device_index: int) -> GSDevice:
 
 
 func get_devices() -> Array[GSDevice]:
-	return _device_map.values()
+	var list: Array[GSDevice] = []
+	for device in _device_map.values():
+		list.append(device)
+	return list
 
 
 func send_scalar(device_index: int, feature_index: int, actuator_type: String, value: float):
@@ -393,3 +396,14 @@ func _on_peer_closed():
 	set_process(false)
 	_state = ClientState.DISCONNECTED
 	client_connection_changed.emit(false)
+	_reset()
+
+
+func _reset():
+	_ack_map.clear()
+	_device_map.clear()
+	_id = 1
+	_ping = 0.0
+	_scanning = false
+	_timeout = 0.0
+	_state = ClientState.DISCONNECTED
