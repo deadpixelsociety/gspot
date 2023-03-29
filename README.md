@@ -1,4 +1,7 @@
 # gspot
+
+![gspot logo](logo.png) 
+
 A Godot 4 Plugin for interacting with intimate haptic devices via the [buttplug.io](https://buttplug.io/) interface.
 
 **This plugin provides a buttplug.io standard compatibile client implementation. To interact with devices a server is also required. See [Intiface Central](https://intiface.com/central/).**
