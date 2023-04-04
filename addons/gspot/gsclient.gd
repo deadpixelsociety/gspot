@@ -8,6 +8,8 @@ const MESSAGE_VERSION = 3
 const ENABLE_RAW_CMD = false
 const RAW_DISCLAIMER = "Raw commands are potentially dangerous and must be manually enabled."
 
+const DEFAULT_PING_TIME = 30000 # 30 seconds
+
 enum ClientState {
 	CONNECTING,
 	HANDSHAKING,
@@ -235,6 +237,8 @@ func send(message: GSMessage):
 func _check_ping(delta: float):
 	if _max_ping_time <= 0.0:
 		return
+	if get_client_state() != ClientState.CONNECTED:
+		return
 	_ping -= delta
 	if _ping <= 0.0:
 		_ping = float(_max_ping_time) / 1000.0
@@ -309,6 +313,8 @@ func _on_message_server_info(message: GSMessage):
 		_server_name = message.fields[GSMessage.MESSAGE_FIELD_SERVER_NAME]
 		_message_version = int(message.fields[GSMessage.MESSAGE_FIELD_MESSAGE_VERSION])
 		_max_ping_time = int(message.fields[GSMessage.MESSAGE_FIELD_MAX_PING_TIME])
+		if _max_ping_time <= 0:
+			_max_ping_time = DEFAULT_PING_TIME
 		client_message.emit("GSClient connected to %s!" % _server_name)
 		client_connection_changed.emit(true)
 
@@ -394,9 +400,8 @@ func _on_peer_closed():
 	var reason = _peer.get_close_reason()
 	client_message.emit("GSClient closed with code %d, reason: %s" % [ code, reason ])
 	set_process(false)
-	_state = ClientState.DISCONNECTED
-	client_connection_changed.emit(false)
 	_reset()
+	client_connection_changed.emit(false)
 
 
 func _reset():
