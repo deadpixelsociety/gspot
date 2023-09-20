@@ -24,9 +24,11 @@ client.request_device_list()
 await client.client_device_list_received
 # Grab the first device.
 var device = client.get_device(0)
-# Send a vibration command via a scalar feature. This assumes the device supports a Vibrate feature in slot 0.
-# Refer to the control panel for a more robust implementation.
-client.send_scalar(device.device_index, 0, "Vibrate", 0.5)
+# Grab the first feature. We'll assume it's a vibrate function or something fun.
+# You will want something more robust.
+var feature = device.features[0]
+# Send the feature to the server, triggering it's action at max (1.0) power for 5 seconds.
+client.send_feature(feature, 1.0, 5.0)
 ```
 
 # Attribution
