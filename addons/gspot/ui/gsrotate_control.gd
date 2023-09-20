@@ -16,4 +16,4 @@ func _ready() -> void:
 
 func _on_speed_value_changed(value: float) -> void:
 	value = clampf(value / 100.0, 0.0, 1.0)
-	client.send_rotate(device.device_index, feature.feature_index, _clockwise.button_pressed, value)
+	client.send_feature(feature, value, 0.0, _clockwise.button_pressed)

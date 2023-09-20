@@ -17,4 +17,4 @@ func _ready() -> void:
 
 func _on_scalar_value_changed(value: float) -> void:
 	value = clampf(value / 100.0, 0.0, 1.0)
-	client.send_scalar(device.device_index, feature.feature_index, feature.actuator_type, value)
+	client.send_feature(feature, value)

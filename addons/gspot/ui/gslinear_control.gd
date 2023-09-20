@@ -16,4 +16,4 @@ func _ready() -> void:
 
 func _on_position_value_changed(value: float) -> void:
 	value = clampf(value / 100.0, 0.0, 1.0)
-	await client.send_linear(device.device_index, feature.feature_index, int(_duration.value), value)
+	await client.send_feature(feature, value, int(_duration.value))
