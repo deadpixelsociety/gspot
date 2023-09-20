@@ -25,6 +25,27 @@ enum ErrorCode {
 	DEVICE = 4
 }
 
+class FeatureDuration extends Node:
+	var client: GSClient
+	var feature: GSFeature
+	var duration: float = 0.0
+	
+	func kill() -> void:
+		duration = 0.0
+		var key = client._get_feature_key(feature)
+		client._durations.erase(key)
+		queue_free()
+	
+	func _process(delta: float) -> void:
+		if not client or not feature:
+			return
+		if duration > 0.0:
+			duration -= delta
+			if duration <= 0.0:
+				client.stop_feature(feature)
+				kill()
+
+
 signal client_connection_changed(connected)
 signal client_device_added(device)
 signal client_device_list_received(devices)
@@ -52,6 +73,7 @@ var _ping: float = 0.0
 var _scanning: bool = false
 var _state: ClientState = ClientState.DISCONNECTED
 var _timeout: float = 0.0
+var _durations: Dictionary = {}
 
 
 func _init() -> void:
@@ -161,6 +183,22 @@ func get_devices() -> Array[GSDevice]:
 	return list
 
 
+func send_feature(feature: GSFeature, value: float, duration: float = 0.0, clockwise: bool = true):
+	if not feature or not feature.device:
+		return
+	match feature.feature_command:
+		GSMessage.MESSAGE_TYPE_SCALAR_CMD:
+			send_scalar(feature.device.device_index, feature.feature_index, feature.actuator_type, value)
+			if duration > 0.0:
+				_create_feature_duration(feature, duration)
+		GSMessage.MESSAGE_TYPE_ROTATE_CMD:
+			send_rotate(feature.device.device_index, feature.feature_index, clockwise, value)
+			if duration > 0.0:
+				_create_feature_duration(feature, duration)
+		GSMessage.MESSAGE_TYPE_LINEAR_CMD:
+			await send_linear(feature.device.device_index, feature.feature_index, duration, value)
+
+
 func send_scalar(device_index: int, feature_index: int, actuator_type: String, value: float):
 	var scalar = GSScalar.new()
 	scalar.index = feature_index
@@ -198,6 +236,20 @@ func send_sensor_subscribe(device_index: int, sensor_index: int, sensor_type: St
 
 func send_sensor_unsubscribe(device_index: int, sensor_index: int, sensor_type: String):
 	send(GSSensorUnsubscribeCmd.new(_get_message_id(), device_index, sensor_index, sensor_type))
+
+
+func stop_feature(feature: GSFeature):
+	if not feature or not feature.device:
+		return
+	match feature.feature_command:
+		GSMessage.MESSAGE_TYPE_SCALAR_CMD:
+			send_scalar(feature.device.device_index, feature.feature_index, feature.actuator_type, 0.0)
+		GSMessage.MESSAGE_TYPE_ROTATE_CMD:
+			send_rotate(feature.device.device_index, feature.feature_index, true, 0.0)
+		GSMessage.MESSAGE_TYPE_LINEAR_CMD:
+			# Linear features move into a position over a duration and stop. Sending a stop for 
+			# these is not needed.
+			pass
 
 
 func stop_device(device_index: int):
@@ -412,3 +464,24 @@ func _reset():
 	_scanning = false
 	_timeout = 0.0
 	_state = ClientState.DISCONNECTED
+
+
+func _get_feature_key(feature: GSFeature) -> int:
+	return feature.device.device_index * 1000 + feature.feature_index
+
+
+func _get_feature_duration(feature: GSFeature) -> FeatureDuration:
+	var key = _get_feature_key(feature)
+	var duration = _durations.get(key, null)
+	if not duration:
+		duration = FeatureDuration.new()
+		add_child(duration)
+		duration.client = self
+		duration.feature = feature
+		_durations[key] = duration
+	return duration
+
+
+func _create_feature_duration(feature: GSFeature, duration: float) -> void:
+	var feature_duration = _get_feature_duration(feature)
+	feature_duration.duration = duration

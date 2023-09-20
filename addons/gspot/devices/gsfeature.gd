@@ -2,6 +2,7 @@ extends RefCounted
 class_name GSFeature
 
 
+var device: GSDevice
 var feature_command: String
 var feature_index: int
 var feature_descriptor: String
@@ -31,3 +32,11 @@ static func deserialize(command: String, index: int, data: Dictionary) -> GSFeat
 		for endpoint in data[GSMessage.MESSAGE_FIELD_ENDPOINTS]:
 			feature.endpoints.append(endpoint)
 	return feature
+
+
+func get_display_name() -> String:
+	if feature_descriptor != null and feature_descriptor != "" and feature_descriptor != "N/A":
+		return feature_descriptor
+	if actuator_type != null and actuator_type != "":
+		return actuator_type
+	return feature_command

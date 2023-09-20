@@ -25,9 +25,13 @@ static func deserialize(data: Dictionary) -> GSDevice:
 			if features is Array:
 				for i in features.size():
 					var feature_data = features[i]
-					device.features.append(GSFeature.deserialize(feature_command, i, feature_data))
+					var feature = GSFeature.deserialize(feature_command, i, feature_data)
+					feature.device = device
+					device.features.append(feature)
 			elif features is Dictionary:
-				device.features.append(GSFeature.deserialize(feature_command, 0, features))
+				var feature = GSFeature.deserialize(feature_command, 0, features)
+				feature.device = device
+				device.features.append(feature)
 	return device
 
 
