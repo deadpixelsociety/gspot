@@ -30,6 +30,12 @@ var feature = device.features[0]
 # Send the feature to the server, triggering it's action at max (1.0) power for 5 seconds.
 client.send_feature(feature, 1.0, 5.0)
 ```
+# Apps Made Using gspot!
+* [vibecheck](https://deadpixelsociety.itch.io/vibecheck) - An app that adds Twitch integration to your toys.
+* [godohmygod](https://github.com/deadpixelsociety/godohmygod) - An editor plugin for Godot that adds toy support while coding.
+
+# Games Made Using gspot!
+* [Mousegun](https://shinlalala.itch.io/mousegun) by [Shinlalala](https://shinlalala.itch.io/) - Mousegun is a retro FPS in which you take control of the titular character in an action filled adventure.
 
 # Attribution
 The gspot icon was created by [Kokota](https://thenounproject.com/kokota.icon/) and distributed under the [Creative Commons Attribution License (CC BY 3.0)](https://creativecommons.org/licenses/by/3.0/)
