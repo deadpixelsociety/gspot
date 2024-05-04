@@ -12,23 +12,21 @@ A [client control panel](addons/gspot/ui/gscontrol_panel.tscn) is provided for t
 
 ## Quick Example
 ```gdscript
-# Get the client from the scene tree.
-var client = $GSClient
 # Connect to the device server.
-client.start("localhost", 12345)
+GSClient.start("localhost", 12345)
 # Wait for connection.
-await client.client_connection_changed
+await GSClient.client_connection_changed
 # Request the device list from the server.
-client.request_device_list()
+GSClient.request_device_list()
 # Wait for devices to arrive.
-await client.client_device_list_received
+await GSClient.client_device_list_received
 # Grab the first device.
-var device = client.get_device(0)
+var device = GSClient.get_device(0)
 # Grab the first feature. We'll assume it's a vibrate function or something fun.
 # You will want something more robust.
 var feature = device.features[0]
 # Send the feature to the server, triggering it's action at max (1.0) power for 5 seconds.
-client.send_feature(feature, 1.0, 5.0)
+GSClient.send_feature(feature, 1.0, 5.0)
 ```
 # Apps Made Using gspot!
 * [vibecheck](https://deadpixelsociety.itch.io/vibecheck) - An app that adds Twitch integration to your toys.
