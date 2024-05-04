@@ -1,14 +1,15 @@
 extends Node
-class_name GSClient
 
 const CLIENT_NAME = "GSClient"
-const CLIENT_VERSION = "1.0"
+const CLIENT_VERSION = "2.0"
 const MESSAGE_VERSION = 3
+const DEFAULT_HOST = "127.0.0.1"
+const DEFAULT_PORT = 12345
 
 const ENABLE_RAW_CMD = false
 const RAW_DISCLAIMER = "Raw commands are potentially dangerous and must be manually enabled."
 
-const DEFAULT_PING_TIME = 30000 # 30 seconds
+const DEFAULT_PING_TIME = 1000 * 30 # 30 seconds
 
 enum ClientState {
 	CONNECTING,
@@ -58,7 +59,7 @@ signal client_scan_finished()
 signal client_sensor_reading(id, device_index, sensor_index, sensor_type, data)
 signal server_error(id, error, message)
 
-var _hostname: String = "localhost"
+var _hostname: String = DEFAULT_HOST
 var _port: int = 12345
 var _server_name: String
 var _message_version: int
@@ -129,7 +130,7 @@ func remove_message_handler(message_type: String) -> bool:
 	return _message_handlers.erase(message_type)
 
 
-func start(hostname: String = "localhost", port: int = 12345, timeout: int = 60, options: TLSOptions = null) -> Error:
+func start(hostname: String = DEFAULT_HOST, port: int = DEFAULT_PORT, timeout: int = 60, options: TLSOptions = null) -> Error:
 	client_message.emit("GSClient starting...")
 	client_message.emit("Attempting to connect to %s on port %d..." % [ hostname, port ])
 	var protocol = "ws" if not options else "wss"
