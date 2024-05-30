@@ -1,7 +1,7 @@
 extends PanelContainer
 class_name GSControlPanel
 
-const SCALAR_CONTROl = preload("res://addons/gspot/ui/gsscalar_control.tscn")
+const SCALAR_CONTROL = preload("res://addons/gspot/ui/gsscalar_control.tscn")
 const LINEAR_CONTROL = preload("res://addons/gspot/ui/gslinear_control.tscn")
 const ROTATE_CONTROL = preload("res://addons/gspot/ui/gsrotate_control.tscn")
 const SENSOR_CONTROL = preload("res://addons/gspot/ui/gssensor_control.tscn")
