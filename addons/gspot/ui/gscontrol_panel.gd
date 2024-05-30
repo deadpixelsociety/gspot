@@ -201,7 +201,7 @@ func _add_scalars(device: GSDevice):
 	_clear_container(_scalar_container)
 	for feature in device.features:
 		if feature.feature_command == GSMessage.MESSAGE_TYPE_SCALAR_CMD:
-			var scalar = SCALAR_CONTROl.instantiate() as GSScalarControl
+			var scalar = SCALAR_CONTROL.instantiate() as GSScalarControl
 			scalar.client = GSClient
 			scalar.device = device
 			scalar.feature = feature
