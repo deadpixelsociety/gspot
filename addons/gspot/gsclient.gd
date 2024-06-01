@@ -1,15 +1,11 @@
 extends Node
 
-const CLIENT_NAME = "GSClient"
-const CLIENT_VERSION = "2.0"
 const MESSAGE_VERSION = 3
 const DEFAULT_HOST = "127.0.0.1"
 const DEFAULT_PORT = 12345
-
-const ENABLE_RAW_CMD = false
+const DEFAULT_PING_TIME = 1000 * 30 # 30 seconds
 const RAW_DISCLAIMER = "Raw commands are potentially dangerous and must be manually enabled."
 
-const DEFAULT_PING_TIME = 1000 * 30 # 30 seconds
 
 enum ClientState {
 	CONNECTING,
@@ -60,6 +56,7 @@ signal client_scan_finished()
 signal client_sensor_reading(id, device_index, sensor_index, sensor_type, data)
 signal server_error(id, error, message)
 
+
 var _hostname: String = DEFAULT_HOST
 var _port: int = 12345
 var _server_name: String
@@ -94,6 +91,29 @@ func _process(delta: float) -> void:
 	_check_ping(delta)
 	_process_peer(delta)
 
+
+func get_client_name() -> String:
+	return _get_project_value(GSConstants.PROJECT_SETTING_CLIENT_NAME, GSConstants.CLIENT_NAME)
+
+
+func get_client_version() -> String:
+	return _get_project_value(GSConstants.PROJECT_SETTING_CLIENT_VERSION, GSConstants.CLIENT_VERSION)
+
+
+func get_client_string() -> String:
+	return "%s v%s" % [ get_client_name(), get_client_version() ]
+
+
+func is_raw_command_enabled() -> bool:
+	return _get_project_value(GSConstants.PROJECT_SETTING_ENABLE_RAW_COMMANDS, false)
+
+
+func _get_project_value(property: String, default = null):
+	var value = ProjectSettings.get(property)
+	if value == null or value == "":
+		value = default
+	return value
+	
 
 func get_hostname() -> String:
 	return _hostname
@@ -132,7 +152,7 @@ func remove_message_handler(message_type: String) -> bool:
 
 
 func start(hostname: String = DEFAULT_HOST, port: int = DEFAULT_PORT, timeout: int = 60, options: TLSOptions = null) -> Error:
-	client_message.emit("GSClient starting...")
+	client_message.emit("%s starting..." % get_client_string())
 	client_message.emit("Attempting to connect to %s on port %d..." % [ hostname, port ])
 	var protocol = "ws" if not options else "wss"
 	_hostname = hostname
@@ -151,7 +171,7 @@ func start(hostname: String = DEFAULT_HOST, port: int = DEFAULT_PORT, timeout: i
 
 func stop():
 	_peer.close(1000, "Client requested shutdown.")
-	client_message.emit("GSClient stopping...")
+	client_message.emit("%s stopping..." % get_client_string())
 
 
 func scan_start():
@@ -263,22 +283,22 @@ func stop_all_devices():
 
 
 func raw_write(device_index: int, endpoint: String, data: PackedByteArray, write_with_response: bool):
-	assert(ENABLE_RAW_CMD, RAW_DISCLAIMER)
+	assert(is_raw_command_enabled(), RAW_DISCLAIMER)
 	send(GSRawWriteCmd.new(_get_message_id(), device_index, endpoint, data, write_with_response))
 
 
 func raw_read(device_index: int, endpoint: String, expected_length: int, wait_for_data: bool):
-	assert(ENABLE_RAW_CMD, RAW_DISCLAIMER)
+	assert(is_raw_command_enabled(), RAW_DISCLAIMER)
 	send(GSRawReadCmd.new(_get_message_id(), device_index, endpoint, expected_length, wait_for_data))
 
 
 func raw_subscribe(device_index: int, endpoint: String):
-	assert(ENABLE_RAW_CMD, RAW_DISCLAIMER)
+	assert(is_raw_command_enabled(), RAW_DISCLAIMER)
 	send(GSRawSubscribeCmd.new(_get_message_id(), device_index, endpoint))
 
 
 func raw_unsubscribe(device_index: int, endpoint: String):
-	assert(ENABLE_RAW_CMD, RAW_DISCLAIMER)
+	assert(is_raw_command_enabled(), RAW_DISCLAIMER)
 	send(GSRawUnsubscribeCmd.new(_get_message_id(), device_index, endpoint))
 
 
@@ -369,7 +389,7 @@ func _on_message_server_info(message: GSMessage):
 		_max_ping_time = int(message.fields[GSMessage.MESSAGE_FIELD_MAX_PING_TIME])
 		if _max_ping_time <= 0:
 			_max_ping_time = DEFAULT_PING_TIME
-		client_message.emit("GSClient connected to %s!" % _server_name)
+		client_message.emit("%s connected to %s!" % [ get_client_string(), _server_name ])
 		client_connection_changed.emit(true)
 
 
@@ -452,7 +472,7 @@ func _on_peer_closing():
 func _on_peer_closed():
 	var code = _peer.get_close_code()
 	var reason = _peer.get_close_reason()
-	client_message.emit("GSClient closed with code %d, reason: %s" % [ code, reason ])
+	client_message.emit("%s closed with code %d, reason: %s" % [ get_client_string(), code, reason ])
 	set_process(false)
 	_reset()
 	client_connection_changed.emit(false)

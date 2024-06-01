@@ -37,7 +37,7 @@ func _ready() -> void:
 	GSClient.client_device_added.connect(_onGSClient_device_added)
 	GSClient.client_device_removed.connect(_onGSClient_device_removed)
 	GSClient.client_connection_changed.connect(_onGSClient_connection_changed)
-	_title.text = "%s v%s" % [ GSClient.CLIENT_NAME, GSClient.CLIENT_VERSION]
+	_title.text = GSClient.get_client_string()
 
 
 func get_hostname() -> String:
