@@ -29,14 +29,14 @@ const SENSOR_CONTROL = preload("res://addons/gspot/ui/gssensor_control.tscn")
 
 
 func _ready() -> void:
-	GSClient.client_frame_received.connect(_onGSClient_frame_received)
-	GSClient.client_message.connect(_onGSClient_message)
-	GSClient.client_error.connect(_onGSClient_error)
-	GSClient.client_scan_finished.connect(_onGSClient_scan_finished)
-	GSClient.client_device_list_received.connect(_onGSClient_device_list_received)
-	GSClient.client_device_added.connect(_onGSClient_device_added)
-	GSClient.client_device_removed.connect(_onGSClient_device_removed)
-	GSClient.client_connection_changed.connect(_onGSClient_connection_changed)
+	GSClient.client_frame_received.connect(_on_client_frame_received)
+	GSClient.client_message.connect(_on_client_message)
+	GSClient.client_error.connect(_on_client_error)
+	GSClient.client_scan_finished.connect(_on_client_scan_finished)
+	GSClient.client_device_list_received.connect(_on_client_device_list_received)
+	GSClient.client_device_added.connect(_on_client_device_added)
+	GSClient.client_device_removed.connect(_on_client_device_removed)
+	GSClient.client_connection_changed.connect(_on_client_connection_changed)
 	_title.text = GSClient.get_client_string()
 
 
@@ -79,38 +79,38 @@ func _remove_device(device: GSDevice):
 		_device_list.remove_item(idx)
 
 
-func _onGSClient_frame_received(frame: String):
+func _on_client_frame_received(frame: String):
 	_log.add_text("Frame received: %s" % frame)
 	_log.newline()
 
 
-func _onGSClient_message(message: String):
+func _on_client_message(message: String):
 	_log.add_text(message)
 	_log.newline()
 
 
-func _onGSClient_error(error: int, message: String):
+func _on_client_error(error: int, message: String):
 	_log.append_text("[color=red][b]Error %d: %s[/b][/color]" % [ error, message ])
 	_log.newline()
 
 
-func _onGSClient_scan_finished():
+func _on_client_scan_finished():
 	_populate_device_list(GSClient.get_devices())
 
 
-func _onGSClient_device_list_received(devices: Array):
+func _on_client_device_list_received(devices: Array):
 	_populate_device_list(devices)
 
 
-func _onGSClient_device_added(device: GSDevice):
+func _on_client_device_added(device: GSDevice):
 	_add_device(device)
 
 
-func _onGSClient_device_removed(device: GSDevice):
+func _on_client_device_removed(device: GSDevice):
 	_remove_device(device)
 
 
-func _onGSClient_connection_changed(connected: bool):
+func _on_client_connection_changed(connected: bool):
 	if GSClient.is_client_connected():
 		_hostname.editable = false
 		_port.editable = false
