@@ -26,6 +26,7 @@ enum ErrorCode {
 	DEVICE = 4
 }
 
+
 class FeatureDuration extends Node:
 	var client: GSClient
 	var feature: GSFeature
@@ -308,10 +309,10 @@ func _process_peer(delta: float):
 				_handshake()
 			_consume_peer_packets()
 		WebSocketPeer.STATE_CLOSING:
-			if _state == ClientState.CONNECTED:
+			if _state in [ ClientState.CONNECTING, ClientState.CONNECTED ]:
 				_on_peer_closing()
 		WebSocketPeer.STATE_CLOSED:
-			if _state == ClientState.CONNECTED:
+			if _state in [ ClientState.CONNECTING, ClientState.CONNECTED ]:
 				_on_peer_closed()
 
 
