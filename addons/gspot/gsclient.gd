@@ -22,6 +22,13 @@ enum ErrorCode {
 	DEVICE = 4
 }
 
+enum LogLevel {
+	VERBOSE,
+	DEBUG,
+	WARN,
+	ERROR
+}
+
 
 class FeatureDuration extends Node:
 	var client: GSClient
@@ -73,6 +80,7 @@ var _scanning: bool = false
 var _state: ClientState = ClientState.DISCONNECTED
 var _timeout: float = 0.0
 var _durations: Dictionary = {}
+var _log_level: LogLevel = LogLevel.VERBOSE
 
 
 func _init() -> void:
@@ -151,16 +159,34 @@ func remove_message_handler(message_type: String) -> bool:
 	return _message_handlers.erase(message_type)
 
 
+func set_log_level(level: LogLevel) -> void:
+	_log_level = level
+
+
+func get_log_level() -> LogLevel:
+	return _log_level
+
+
+func _log(level: LogLevel, message: String) -> void:
+	if level >= _log_level:
+		client_message.emit(message)
+
+
+func _error(error: Error, message: String) -> void:
+	_log(LogLevel.ERROR, message)
+	client_error.emit(error, message)
+
+
 func start(hostname: String = DEFAULT_HOST, port: int = DEFAULT_PORT, timeout: int = 60, options: TLSOptions = null) -> Error:
-	client_message.emit("%s starting..." % get_client_string())
-	client_message.emit("Attempting to connect to %s on port %d..." % [ hostname, port ])
+	_log(LogLevel.VERBOSE, "%s starting..." % get_client_string())
+	_log(LogLevel.DEBUG, "Attempting to connect to %s on port %d..." % [ hostname, port ])
 	var protocol = "ws" if not options else "wss"
 	_hostname = hostname
 	_port = port
 	_timeout = float(timeout)
 	var resp = _peer.connect_to_url("%s://%s:%d" % [ protocol, hostname, port ], options)
 	if resp != OK:
-		client_error.emit(resp, "Unable to connect to server.")
+		_error(resp, "Unable to connect to server.")
 		set_process(false)
 		_state = ClientState.DISCONNECTED
 	else:
@@ -171,11 +197,11 @@ func start(hostname: String = DEFAULT_HOST, port: int = DEFAULT_PORT, timeout: i
 
 func stop():
 	_peer.close(1000, "Client requested shutdown.")
-	client_message.emit("%s stopping..." % get_client_string())
+	_log(LogLevel.VERBOSE, "%s stopping..." % get_client_string())
 
 
 func scan_start():
-	client_message.emit("Starting device scan...")
+	_log(LogLevel.DEBUG, "Starting device scan...")
 	send(GSStartScanning.new(_get_message_id()))
 	_scanning = true
 
@@ -183,13 +209,13 @@ func scan_start():
 func scan_stop():
 	if not _scanning:
 		return
-	client_message.emit("Ending device scan...")
+	_log(LogLevel.DEBUG, "Ending device scan...")
 	send(GSStopScanning.new(_get_message_id()))
 
 
 func request_device_list():
 	send(GSRequestDeviceList.new(_get_message_id()))
-	client_message.emit("Requesting device list...")
+	_log(LogLevel.DEBUG, "Requesting device list...")
 
 
 func get_device(device_index: int) -> GSDevice:
@@ -304,7 +330,7 @@ func raw_unsubscribe(device_index: int, endpoint: String):
 
 func send(message: GSMessage):
 	_ack_map[message.get_id()] = message
-	client_message.emit("Sending message: %s" % message)
+	_log(LogLevel.DEBUG, "Sending message: %s" % message)
 	_peer.send_text(JSON.stringify([ message.serialize() ]))
 
 
@@ -341,7 +367,7 @@ func _on_connect_timeout():
 		set_process(false)
 		_state = ClientState.DISCONNECTED
 		_peer.close(1001, "Client connection timeout.")
-		client_error.emit(ERR_TIMEOUT, "Connection timed out!")
+		_error(ERR_TIMEOUT, "Connection timed out!")
 		client_connection_changed.emit(false)
 
 
@@ -362,7 +388,7 @@ func _consume_peer_packets():
 		client_frame_received.emit(frame)
 		var data = JSON.parse_string(frame)
 		if data == null:
-			client_error.emit(ERR_INVALID_DATA, "Invalid data frame received from server: %s" % frame)
+			_log(LogLevel.WARN, "Invalid data frame received from server: %s" % frame)
 			continue
 		for msg in data:
 			var message = GSMessage.deserialize(msg)
@@ -389,7 +415,7 @@ func _on_message_server_info(message: GSMessage):
 		_max_ping_time = int(message.fields[GSMessage.MESSAGE_FIELD_MAX_PING_TIME])
 		if _max_ping_time <= 0:
 			_max_ping_time = DEFAULT_PING_TIME
-		client_message.emit("%s connected to %s!" % [ get_client_string(), _server_name ])
+		_log(LogLevel.VERBOSE, "%s connected to %s!" % [ get_client_string(), _server_name ])
 		client_connection_changed.emit(true)
 
 
@@ -448,7 +474,7 @@ func _on_handle_message(message: GSMessage):
 
 
 func _on_unhandled_message(message: GSMessage):
-	client_message.emit("Unrecognized message type: %s" % message.message_type)
+	_log(LogLevel.WARN, "Unrecognized message type: %s" % message.message_type)
 
 
 func _ack(ack_id: int):
@@ -472,7 +498,7 @@ func _on_peer_closing():
 func _on_peer_closed():
 	var code = _peer.get_close_code()
 	var reason = _peer.get_close_reason()
-	client_message.emit("%s closed with code %d, reason: %s" % [ get_client_string(), code, reason ])
+	_log(LogLevel.DEBUG, "%s closed with code %d, reason: %s" % [ get_client_string(), code, reason ])
 	set_process(false)
 	_reset()
 	client_connection_changed.emit(false)
