@@ -56,10 +56,6 @@ GSClient.get_client_string() # GSClient v2.0
 GSClient.is_raw_command_enabled() # false
 ```
 
-# Apps Made Using gspot!
-* [vibecheck](https://deadpixelsociety.itch.io/vibecheck) - An app that adds Twitch integration to your toys.
-* [godohmygod](https://github.com/deadpixelsociety/godohmygod) - An editor plugin for Godot that adds toy support while coding.
-
 # Games Made Using gspot!
 * [Mousegun](https://shinlalala.itch.io/mousegun) by [Shinlalala](https://shinlalala.itch.io/) - Mousegun is a retro FPS in which you take control of the titular character in an action filled adventure.
 
