@@ -250,3 +250,6 @@ func _clear_container(control: Control):
 		child.queue_free()
 
 
+func _on_test_pressed() -> void:
+	var patterns: GSPatterns = GSClient.ext(GSExtension.PATTERNS)
+	print(GSClient.ext_call(GSExtension.PATTERNS, "test", [ "hello" ]))
