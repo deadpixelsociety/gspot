@@ -98,14 +98,21 @@ func play(
 	feature: GSFeature, 
 	loop: bool = false, 
 	intensity: float = 1.0,
+	replace_active: bool = false,
 	sample_rate: float = -1.0, 
-	linear_duration: float = 1.0,
+	linear_duration: float = 0.0,
 	rotate_clockwise: bool = true
-) -> int:
-	var active := get_active_feature(feature)
-	if active:
-		active.stop()
+) -> GSActivePattern:
+	var parent: GSActivePattern = null
+	var active := get_active_by_feature(feature)
+	if GSUtil.is_valid(active):
+		if replace_active:
+			active.stop()
+		else:
+			parent = active
+			active.pause()
 	active = GSActivePattern.new()
+	active.parent = parent
 	active.pattern = pattern
 	active.feature = feature
 	active.intensity = clampf(intensity, 0.0, 1.0)
@@ -117,48 +124,38 @@ func play(
 	active.linear_duration = linear_duration
 	active.rotate_clockwise = rotate_clockwise
 	active.stopped.connect(func(_active: GSActivePattern): 
-		if _active.idx < 0 or _active.idx > _active_patterns.size():
-			return
-		_active_patterns.remove_at(_active.idx)
+		_active_patterns.erase(_active)
+		if GSUtil.is_valid(_active) and GSUtil.is_valid(_active.parent):
+			_active.parent.resume()
 	)
 	_active_patterns.append(active)
-	active.idx = _active_patterns.size() - 1
 	GSClient.add_child(active)
-	return active.idx
-
-
-func pause(active_idx: int) -> void:
-	var active = get_active_pattern(active_idx)
-	if active:
-		active.pause()
-
-
-func resume(active_idx: int) -> void:
-	var active = get_active_pattern(active_idx)
-	if active:
-		active.resume()
-
-
-func stop(active_idx: int) -> void:
-	var active = get_active_pattern(active_idx)
-	if active:
-		active.stop()
+	return active
 
 
 func get_active_pattern(active_idx) -> GSActivePattern:
 	if active_idx < 0 or active_idx >= _active_patterns.size():
 		return
 	var active = _active_patterns[active_idx]
-	if not active or active.is_queued_for_deletion() or not is_instance_valid(active):
+	if not GSUtil.is_valid(active):
 		return null
 	return active
 
 
-func get_active_feature(feature: GSFeature) -> GSActivePattern:
-	for active in get_active_patterns():
+func get_active_by_feature(feature: GSFeature) -> GSActivePattern:
+	for i  in range(_active_patterns.size() - 1, -1, -1):
+		var active := _active_patterns[i]
 		if active.feature == feature:
 			return active
 	return null
+
+
+func get_all_active_by_feature(feature: GSFeature) -> Array[GSActivePattern]:
+	var list: Array[GSActivePattern] = []
+	for active in _active_patterns:
+		if active.feature == feature:
+			list.append(active)
+	return list
 
 
 func get_active_patterns() -> Array[GSActivePattern]:

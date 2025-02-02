@@ -249,7 +249,7 @@ func _clear_container(control: Control):
 	for child in control.get_children():
 		child.queue_free()
 
-var _active: int = -1
+var _active: GSActivePattern = null
 
 func _on_test_pressed() -> void:
 	var sequence: PackedFloat32Array = [ 0.5, 1.0, 0.5, 0.2, 0.2, 0.3, 0.4, 1.0 ]
@@ -260,16 +260,14 @@ func _on_test_pressed() -> void:
 
 
 func _on_pause_pressed() -> void:
-	var active: GSActivePattern = GSClient.ext(GSPatterns.NAME).get_active_pattern(_active)
-	if active:
-		if active.get_state() == GSActivePattern.PAUSED:
-			active.resume()
-		elif active.get_state() == GSActivePattern.PLAYING:
-			active.pause()
+	if GSUtil.is_valid(_active):
+		if _active.get_state() == GSActivePattern.PAUSED:
+			_active.resume()
+		elif _active.get_state() == GSActivePattern.PLAYING:
+			_active.pause()
 
 
 func _on_stop_pressed() -> void:
-	var active: GSActivePattern = GSClient.ext(GSPatterns.NAME).get_active_pattern(_active)
-	if active:
-		active.stop()
-		_active = -1
+	if GSUtil.is_valid(_active):
+		_active.stop()
+		_active = null

@@ -11,13 +11,13 @@ signal stopped(active: GSActivePattern)
 enum {PLAYING,PAUSED,STOPPED}
 
 
-var idx: int = -1
+var parent: GSActivePattern = null
 var pattern: GSPattern = null
 var feature: GSFeature = null
 var intensity: float = 1.0
-var sample_rate: float = 0.1
+var sample_rate: float = GSDevice.DEFAULT_MESSAGE_RATE
 var loop: bool = false
-var linear_duration: float = 1.0
+var linear_duration: float = 0.0
 var rotate_clockwise: bool = true
 
 var _tt: float = 0.0
@@ -26,6 +26,7 @@ var _state = STOPPED
 
 
 func _ready() -> void:
+	name = "GSActivePattern-%s-%s-%s" % [ feature.device.get_display_name(), feature.get_display_name(), pattern.pattern_name ]
 	play()
 
 
@@ -37,7 +38,13 @@ func _process(delta: float) -> void:
 	if _sr >= sample_rate and not is_queued_for_deletion():
 		_sr -= sample_rate
 		var t = clampf(0.0 if pattern.duration <= 0 else _tt / pattern.duration, 0.0, 1.0)
-		await GSClient.send_feature(feature, _get_value(t), linear_duration * 1000.0, rotate_clockwise)
+		match feature.feature_command:
+			GSMessage.MESSAGE_TYPE_SCALAR_CMD:
+				GSClient.send_feature(feature, _get_value(t))
+			GSMessage.MESSAGE_TYPE_ROTATE_CMD:
+				GSClient.send_feature(feature, _get_value(t), 0.0, rotate_clockwise)
+			GSMessage.MESSAGE_TYPE_LINEAR_CMD:
+				await GSClient.send_feature(feature, _get_value(t), linear_duration * 1000.0)
 	if _tt >= pattern.duration:
 		if loop:
 			_tt = 0.0

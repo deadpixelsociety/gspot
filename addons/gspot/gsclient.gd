@@ -36,11 +36,10 @@ class FeatureDuration extends Node:
 	var feature: GSFeature
 	var duration: float = 0.0
 	
-	func kill() -> void:
-		duration = 0.0
-		var key = client._get_feature_key(feature)
-		client._durations.erase(key)
-		queue_free()
+	
+	func _ready() -> void:
+		name = "FeatureDuration-%s-%s" % [ feature.device.get_display_name(), feature.get_display_name() ]
+	
 	
 	func _process(delta: float) -> void:
 		if not client or not feature:
@@ -50,6 +49,14 @@ class FeatureDuration extends Node:
 			if duration <= 0.0:
 				client.stop_feature(feature)
 				kill()
+	
+	
+	func kill() -> void:
+		duration = 0.0
+		var key = client._get_feature_key(feature)
+		client._durations.erase(key)
+		queue_free()
+
 
 
 signal client_connection_changed(connected)
@@ -606,10 +613,10 @@ func _get_feature_duration(feature: GSFeature) -> FeatureDuration:
 	var duration = _durations.get(key, null)
 	if not duration:
 		duration = FeatureDuration.new()
-		add_child(duration)
 		duration.client = self
 		duration.feature = feature
 		_durations[key] = duration
+		add_child(duration)
 	return duration
 
 
