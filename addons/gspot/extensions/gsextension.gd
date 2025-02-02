@@ -1,8 +1,6 @@
 extends RefCounted
 class_name GSExtension
 
-const PATTERNS := "patterns"
-
 
 func get_extension_name() -> String:
 	return "new-extension"

@@ -7,6 +7,7 @@ const DEFAULT_PING_TIME: int = 1000 * 30 # 30 seconds
 const RAW_DISCLAIMER: String = "Raw commands are potentially dangerous and must be manually enabled."
 const EXTENSIONS_DIR: String = "extensions"
 
+
 enum ClientState {
 	CONNECTING,
 	HANDSHAKING,
@@ -64,12 +65,13 @@ signal client_sensor_reading(id, device_index, sensor_index, sensor_type, data)
 signal server_error(id, error, message)
 
 
+var extensions_dir: String = EXTENSIONS_DIR
+
 var _hostname: String = DEFAULT_HOST
 var _port: int = 12345
 var _server_name: String
 var _message_version: int
 var _max_ping_time: int
-
 var _ack_map: Dictionary = {}
 var _device_map: Dictionary = {}
 var _id: int = 1
@@ -94,9 +96,6 @@ func _init() -> void:
 	add_message_handler(GSMessage.MESSAGE_TYPE_SCANNING_FINISHED, _on_message_scanning_finished)
 	add_message_handler(GSMessage.MESSAGE_TYPE_SENSOR_READING, _on_message_sensor_reading)
 	add_message_handler(GSMessage.MESSAGE_TYPE_RAW_READING, _on_message_raw_reading)
-	var script: Script = get_script()
-	var script_path := script.resource_path.get_base_dir()
-	_populate_extension_map(script_path, EXTENSIONS_DIR)
 
 
 func _process(delta: float) -> void:
@@ -105,11 +104,12 @@ func _process(delta: float) -> void:
 
 
 func _enter_tree() -> void:
-	_load_extensions()
+	init_extensions()
+	load_extensions()
 
 
 func _exit_tree() -> void:
-	_unload_extensions()
+	unload_extensions()
 
 
 func get_client_name() -> String:
@@ -340,6 +340,12 @@ func raw_unsubscribe(device_index: int, endpoint: String):
 	send(GSRawUnsubscribeCmd.new(_get_message_id(), device_index, endpoint))
 
 
+func send(message: GSMessage):
+	_ack_map[message.get_id()] = message
+	_log(LogLevel.DEBUG, "Sending message: %s" % message)
+	_peer.send_text(JSON.stringify([ message.serialize() ]))
+
+
 func ext(extension_name: String) -> Variant:
 	if _extension_map.has(extension_name):
 		return _extension_map[extension_name]
@@ -353,10 +359,62 @@ func ext_call(extension_name: String, method_name: String, args: Array = []) -> 
 	return extension.callv(method_name, args)
 
 
-func send(message: GSMessage):
-	_ack_map[message.get_id()] = message
-	_log(LogLevel.DEBUG, "Sending message: %s" % message)
-	_peer.send_text(JSON.stringify([ message.serialize() ]))
+func init_extensions() -> void:
+	_extension_map.clear()
+	var script: Script = get_script()
+	var script_path := script.resource_path.get_base_dir()
+	_populate_extension_map(script_path, extensions_dir)
+
+
+func load_extensions() -> void:
+	var extensions := _prioritize_extensions()
+	for ext: GSExtension in extensions:
+		_log(LogLevel.DEBUG, "Loading '%s'..." % ext.get_extension_name())
+		if not ext.load_extension(self):
+			_log(LogLevel.DEBUG, "!! Extension load failed and removed from extension list.")
+			_extension_map.erase(ext.get_extension_name())
+		else:
+			_log(LogLevel.DEBUG, "** Extension loaded!")
+
+
+func unload_extensions() -> void:
+	var extensions := _prioritize_extensions()
+	for i in range(extensions.size() - 1, -1, -1):
+		_log(LogLevel.DEBUG, "Unloading extension %s..." % extensions[i].get_extension_name())
+		extensions[i].unload_extension(self)
+
+
+func _populate_extension_map(current_dir: String, ext_dir: String) -> void:
+	var extension_path := "%s/%s" % [ current_dir, ext_dir ]
+	
+	var dir := DirAccess.open(extension_path)
+	if not dir:
+		return
+	
+	_log(LogLevel.DEBUG, "Loading extensions from %s..." % extension_path)
+	
+	dir.list_dir_begin()
+	var filename := dir.get_next()
+	while filename != "":
+		if dir.current_is_dir():
+			_populate_extension_map(extension_path, filename)
+		else:
+			if filename.contains(".gd"):
+				var res := ResourceLoader.load("%s/%s" % [ extension_path, filename ])
+				if res is Script:
+					var ext_script = res.new()
+					if ext_script is GSExtension and not ext_script.get_script() == GSExtension:
+						_log(LogLevel.DEBUG, "Found extension %s." % filename)
+						_extension_map[ext_script.get_extension_name()] = ext_script
+		filename = dir.get_next()
+
+
+func _prioritize_extensions() -> Array:
+	var extensions := _extension_map.values()
+	extensions.sort_custom(func(a: GSExtension, b: GSExtension):
+		return a.get_extension_priority() > b.get_extension_priority()
+	)
+	return extensions
 
 
 func _check_ping(delta: float):
@@ -560,45 +618,3 @@ func _create_feature_duration(feature: GSFeature, duration: float) -> void:
 	feature_duration.duration = duration
 
 
-func _populate_extension_map(current_dir: String, ext_dir: String) -> void:
-	var extension_path := "%s/%s" % [ current_dir, ext_dir ]
-	
-	var dir := DirAccess.open(extension_path)
-	if not dir:
-		return
-	
-	dir.list_dir_begin()
-	var filename := dir.get_next()
-	while filename != "":
-		if dir.current_is_dir():
-			_populate_extension_map(extension_path, filename)
-		else:
-			if filename.contains(".gd"):
-				filename = filename.rstrip(".remap")
-				var res := ResourceLoader.load("%s/%s" % [ extension_path, filename ])
-				if res is Script:
-					var ext_script = res.new()
-					if ext_script is GSExtension and not ext_script.get_script() == GSExtension:
-						_extension_map[ext_script.get_extension_name()] = ext_script
-		filename = dir.get_next()
-
-
-func _prioritize_extensions() -> Array:
-	var extensions := _extension_map.values()
-	extensions.sort_custom(func(a: GSExtension, b: GSExtension):
-		return a.get_extension_priority() > b.get_extension_priority()
-	)
-	return extensions
-
-
-func _load_extensions() -> void:
-	var extensions := _prioritize_extensions()
-	for ext: GSExtension in extensions:
-		if not ext.load_extension(self):
-			_extension_map.erase(ext.get_extension_name())
-
-
-func _unload_extensions() -> void:
-	var extensions := _prioritize_extensions()
-	for i in range(extensions.size() - 1, -1, -1):
-		extensions[i].unload_extension(self)

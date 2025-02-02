@@ -1,6 +1,9 @@
 extends RefCounted
 class_name GSDevice
 
+const DEFAULT_MESSAGE_RATE := 0.2
+
+
 var device_name: String
 var device_display_name: String
 var device_index: int
@@ -50,3 +53,10 @@ func get_feature(feature: String) -> GSFeature:
 	if results.size() > 0:
 		return results.front()
 	return null
+
+
+func get_message_rate() -> float:
+	var rate = float(device_message_timing_gap) / 1000.0
+	if rate <= 0.0:
+		return DEFAULT_MESSAGE_RATE
+	return rate
