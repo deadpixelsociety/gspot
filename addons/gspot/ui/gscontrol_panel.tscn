@@ -88,6 +88,18 @@ custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
 text = "Test"
 
+[node name="Pause" type="Button" parent="MarginContainer/VBoxContainer/ServerConnection"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+text = "Pause/Resume"
+
+[node name="Stop" type="Button" parent="MarginContainer/VBoxContainer/ServerConnection"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+text = "Stop"
+
 [node name="DeviceControl" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
@@ -198,6 +210,8 @@ scroll_following = true
 [connection signal="pressed" from="MarginContainer/VBoxContainer/ServerConnection/Connect" to="." method="_on_connect_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/ServerConnection/Disconnect" to="." method="_on_disconnect_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/ServerConnection/Test" to="." method="_on_test_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ServerConnection/Pause" to="." method="_on_pause_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ServerConnection/Stop" to="." method="_on_stop_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/DeviceControl/RequestDeviceList" to="." method="_on_request_device_list_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/DeviceControl/StartScan" to="." method="_on_start_scan_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/DeviceControl/StopScan" to="." method="_on_stop_scan_pressed"]

@@ -249,7 +249,27 @@ func _clear_container(control: Control):
 	for child in control.get_children():
 		child.queue_free()
 
+var _active: int = -1
 
 func _on_test_pressed() -> void:
-	var patterns: GSPatterns = GSClient.ext(GSExtension.PATTERNS)
-	print(GSClient.ext_call(GSExtension.PATTERNS, "test", [ "hello" ]))
+	var sequence: PackedFloat32Array = [ 0.5, 1.0, 0.5, 0.2, 0.2, 0.3, 0.4, 1.0 ]
+	var patterns: GSPatterns = GSClient.ext(GSPatterns.NAME)
+	var pattern := patterns.create_sequence_pattern("test", 10.0, sequence)
+	var feature := GSClient.get_device(0).features[0]
+	_active = patterns.play(pattern, feature)
+
+
+func _on_pause_pressed() -> void:
+	var active: GSActivePattern = GSClient.ext(GSPatterns.NAME).get_active_pattern(_active)
+	if active:
+		if active.get_state() == GSActivePattern.PAUSED:
+			active.resume()
+		elif active.get_state() == GSActivePattern.PLAYING:
+			active.pause()
+
+
+func _on_stop_pressed() -> void:
+	var active: GSActivePattern = GSClient.ext(GSPatterns.NAME).get_active_pattern(_active)
+	if active:
+		active.stop()
+		_active = -1
