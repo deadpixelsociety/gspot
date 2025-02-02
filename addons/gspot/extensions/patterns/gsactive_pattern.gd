@@ -14,6 +14,7 @@ enum {PLAYING,PAUSED,STOPPED}
 var idx: int = -1
 var pattern: GSPattern = null
 var feature: GSFeature = null
+var intensity: float = 1.0
 var sample_rate: float = 0.1
 var loop: bool = false
 var linear_duration: float = 1.0
@@ -36,8 +37,7 @@ func _process(delta: float) -> void:
 	if _sr >= sample_rate and not is_queued_for_deletion():
 		_sr -= sample_rate
 		var t = clampf(0.0 if pattern.duration <= 0 else _tt / pattern.duration, 0.0, 1.0)
-		var value = pattern.get_generator().get_value(t)
-		await GSClient.send_feature(feature, value, linear_duration * 1000.0, rotate_clockwise)
+		await GSClient.send_feature(feature, _get_value(t), linear_duration * 1000.0, rotate_clockwise)
 	if _tt >= pattern.duration:
 		if loop:
 			_tt = 0.0
@@ -53,6 +53,10 @@ func is_playing() -> bool:
 	return get_state() == PLAYING
 
 
+func get_intensity() -> float:
+	return clampf(intensity, 0.0, 1.0)
+
+
 func play() -> void:
 	if is_queued_for_deletion():
 		return
@@ -60,7 +64,7 @@ func play() -> void:
 	played.emit(self)
 	await GSClient.send_feature(
 		feature, 
-		pattern.get_generator().get_value(0.0), 
+		_get_value(0.0),
 		linear_duration * 1000.0, 
 		rotate_clockwise
 	)
@@ -85,3 +89,7 @@ func stop() -> void:
 		GSClient.stop_feature(feature)
 		stopped.emit(self)
 		queue_free()
+
+
+func _get_value(t: float) -> float:
+	return pattern.get_generator().get_value(t) * get_intensity()

@@ -97,6 +97,7 @@ func play(
 	pattern: GSPattern, 
 	feature: GSFeature, 
 	loop: bool = false, 
+	intensity: float = 1.0,
 	sample_rate: float = -1.0, 
 	linear_duration: float = 1.0,
 	rotate_clockwise: bool = true
@@ -107,6 +108,7 @@ func play(
 	active = GSActivePattern.new()
 	active.pattern = pattern
 	active.feature = feature
+	active.intensity = clampf(intensity, 0.0, 1.0)
 	# If no sample rate is provided use the device value.
 	if sample_rate <= 0:
 		sample_rate = feature.device.get_message_rate()
