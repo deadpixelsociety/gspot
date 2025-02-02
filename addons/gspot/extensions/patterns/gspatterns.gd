@@ -60,7 +60,7 @@ func serialize_pattern(pattern: GSPattern) -> String:
 	}
 	
 	if pattern is GSCurvePattern:
-		data[FIELD_CURVE] = pattern.curve
+		data[FIELD_CURVE] = pattern.curve.resource_path if pattern.curve else ""
 	if pattern is GSSequencePattern:
 		data[FIELD_SEQUENCE] = pattern.sequence
 	
@@ -78,7 +78,9 @@ func deserialize_pattern(json: String) -> GSPattern:
 		pattern.sequence = data[FIELD_SEQUENCE]
 	if data.has(FIELD_CURVE):
 		pattern = GSCurvePattern.new()
-		pattern.curve = data[FIELD_CURVE]
+		var curve_path: String = data[FIELD_CURVE]
+		if curve_path and not curve_path.is_empty() and FileAccess.file_exists(curve_path):
+			pattern.curve = ResourceLoader.load(curve_path)
 	
 	if not pattern:
 		return null
