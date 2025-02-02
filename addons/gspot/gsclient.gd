@@ -353,8 +353,12 @@ func send(message: GSMessage):
 	_peer.send_text(JSON.stringify([ message.serialize() ]))
 
 
+func has_ext(extension_name: String) -> bool:
+	return _extension_map.has(extension_name)
+
+
 func ext(extension_name: String) -> Variant:
-	if _extension_map.has(extension_name):
+	if has_ext(extension_name):
 		return _extension_map[extension_name]
 	return null
 
