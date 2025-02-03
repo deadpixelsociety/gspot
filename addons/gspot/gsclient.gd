@@ -120,11 +120,11 @@ func _exit_tree() -> void:
 
 
 func get_client_name() -> String:
-	return _get_project_value(GSConstants.PROJECT_SETTING_CLIENT_NAME, GSConstants.CLIENT_NAME)
+	return GSUtil.get_project_value(GSConstants.PROJECT_SETTING_CLIENT_NAME, GSConstants.CLIENT_NAME)
 
 
 func get_client_version() -> String:
-	return _get_project_value(GSConstants.PROJECT_SETTING_CLIENT_VERSION, GSConstants.CLIENT_VERSION)
+	return GSUtil.get_project_value(GSConstants.PROJECT_SETTING_CLIENT_VERSION, GSConstants.CLIENT_VERSION)
 
 
 func get_client_string() -> String:
@@ -132,15 +132,8 @@ func get_client_string() -> String:
 
 
 func is_raw_command_enabled() -> bool:
-	return _get_project_value(GSConstants.PROJECT_SETTING_ENABLE_RAW_COMMANDS, false)
+	return GSUtil.get_project_value(GSConstants.PROJECT_SETTING_ENABLE_RAW_COMMANDS, false)
 
-
-func _get_project_value(property: String, default = null):
-	var value = ProjectSettings.get(property)
-	if value == null or value == "":
-		value = default
-	return value
-	
 
 func get_hostname() -> String:
 	return _hostname
