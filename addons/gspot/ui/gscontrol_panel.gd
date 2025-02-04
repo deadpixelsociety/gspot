@@ -26,6 +26,7 @@ const SENSOR_CONTROL = preload("res://addons/gspot/ui/gssensor_control.tscn")
 @onready var _linear_container: VBoxContainer = %LinearContainer
 @onready var _sensor_container: VBoxContainer = %SensorContainer
 @onready var _log: RichTextLabel = %Log
+@onready var _pattern_editor_window: Window = %PatternEditorWindow
 
 
 func _ready() -> void:
@@ -244,3 +245,11 @@ func _add_sensors(device: GSDevice):
 func _clear_container(control: Control):
 	for child in control.get_children():
 		child.queue_free()
+
+
+func _on_open_pattern_editor_pressed() -> void:
+	_pattern_editor_window.show()
+
+
+func _on_pattern_editor_window_close_requested() -> void:
+	_pattern_editor_window.hide()

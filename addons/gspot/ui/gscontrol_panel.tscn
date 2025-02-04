@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://prwyw8cdhaos"]
+[gd_scene load_steps=6 format=3 uid="uid://prwyw8cdhaos"]
 
 [ext_resource type="Script" path="res://addons/gspot/ui/gscontrol_panel.gd" id="1_ahhjr"]
 [ext_resource type="Theme" uid="uid://cnuol0ry2vobn" path="res://addons/gspot/assets/gspot_theme.tres" id="1_oj7qg"]
 [ext_resource type="LabelSettings" uid="uid://cyuy5onflhliv" path="res://addons/gspot/assets/shadowed_label.tres" id="4_71pte"]
+[ext_resource type="PackedScene" uid="uid://bm821vwhvx6im" path="res://addons/gspot/extensions/patterns/pattern_editor/pattern_editor.tscn" id="4_e4s7h"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_qplhf"]
 font_size = 48
@@ -81,6 +82,12 @@ visible = false
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
 text = "Disconnect"
+
+[node name="Open Pattern Editor" type="Button" parent="MarginContainer/VBoxContainer/ServerConnection"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+text = "Open Pattern Editor"
 
 [node name="DeviceControl" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -192,11 +199,23 @@ size_flags_vertical = 8
 bbcode_enabled = true
 scroll_following = true
 
+[node name="PatternEditorWindow" type="Window" parent="."]
+unique_name_in_owner = true
+title = "Pattern Editor"
+initial_position = 4
+size = Vector2i(1280, 720)
+visible = false
+theme = ExtResource("1_oj7qg")
+
+[node name="PatternEditor" parent="PatternEditorWindow" instance=ExtResource("4_e4s7h")]
+
 [connection signal="pressed" from="MarginContainer/VBoxContainer/ServerConnection/Connect" to="." method="_on_connect_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/ServerConnection/Disconnect" to="." method="_on_disconnect_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ServerConnection/Open Pattern Editor" to="." method="_on_open_pattern_editor_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/DeviceControl/RequestDeviceList" to="." method="_on_request_device_list_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/DeviceControl/StartScan" to="." method="_on_start_scan_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/DeviceControl/StopScan" to="." method="_on_stop_scan_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/DeviceControl/StopDevice" to="." method="_on_stop_device_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/DeviceControl/StopAllDevices" to="." method="_on_stop_all_devices_pressed"]
 [connection signal="item_clicked" from="MarginContainer/VBoxContainer/DeviceContainer/DeviceList" to="." method="_on_device_list_item_clicked"]
+[connection signal="close_requested" from="PatternEditorWindow" to="." method="_on_pattern_editor_window_close_requested"]

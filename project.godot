@@ -19,6 +19,10 @@ config/icon="res://icon.svg"
 
 GSClient="*res://addons/gspot/gsclient.gd"
 
+[display]
+
+window/subwindows/embed_subwindows=false
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gspot/plugin.cfg")

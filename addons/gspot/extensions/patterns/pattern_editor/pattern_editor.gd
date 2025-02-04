@@ -64,7 +64,10 @@ func _on_save_pressed() -> void:
 
 
 func _on_exit_pressed() -> void:
-	get_tree().quit()
+	if get_parent() is Window:
+		get_parent().close_requested.emit()
+	else:
+		get_tree().quit()
 
 
 func _on_save_dialog_file_selected(path: String) -> void:
