@@ -10,6 +10,6 @@ static func is_valid(obj) -> bool:
 
 static func get_project_value(property: String, default = null):
 	var value = ProjectSettings.get(property)
-	if value == null or value == "":
+	if value == null or (value is String and value == ""):
 		value = default
 	return value
