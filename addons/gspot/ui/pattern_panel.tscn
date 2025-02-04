@@ -1,0 +1,84 @@
+[gd_scene load_steps=4 format=3 uid="uid://do6sglkfvaaps"]
+
+[ext_resource type="Script" path="res://addons/gspot/ui/pattern_panel.gd" id="1_p4chd"]
+[ext_resource type="LabelSettings" uid="uid://cyuy5onflhliv" path="res://addons/gspot/assets/shadowed_label.tres" id="2_wwmwy"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p56hh"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.473976, 0.473976, 0.473975, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="PatternPanel" type="PanelContainer"]
+offset_right = 153.0
+offset_bottom = 121.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_p56hh")
+script = ExtResource("1_p4chd")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Patterns"
+label_settings = ExtResource("2_wwmwy")
+horizontal_alignment = 1
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="PlayPattern" type="Button" parent="MarginContainer/VBoxContainer/GridContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Play"
+
+[node name="StopPattern" type="Button" parent="MarginContainer/VBoxContainer/GridContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Stop"
+
+[node name="PausePattern" type="Button" parent="MarginContainer/VBoxContainer/GridContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Pause"
+
+[node name="ResumePattern" type="Button" parent="MarginContainer/VBoxContainer/GridContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Resume"
+
+[node name="OpenDialog" type="FileDialog" parent="."]
+unique_name_in_owner = true
+title = "Open a File"
+initial_position = 4
+size = Vector2i(1280, 720)
+ok_button_text = "Open"
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.pattern")
+use_native_dialog = true
+
+[connection signal="pressed" from="MarginContainer/VBoxContainer/GridContainer/PlayPattern" to="." method="_on_play_pattern_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/GridContainer/StopPattern" to="." method="_on_stop_pattern_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/GridContainer/PausePattern" to="." method="_on_pause_pattern_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/GridContainer/ResumePattern" to="." method="_on_resume_pattern_pressed"]
+[connection signal="file_selected" from="OpenDialog" to="." method="_on_open_dialog_file_selected"]
