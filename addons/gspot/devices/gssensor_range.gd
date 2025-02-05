@@ -1,7 +1,10 @@
 class_name GSSensorRange
 extends RefCounted
+## Represents the valid range of a sensor value.
 
+## The minimum sensor value.
 var sensor_range_min: int = -1
+## The maximum sensor value.
 var sensor_range_max: int = -1
 
 

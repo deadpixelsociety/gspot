@@ -1,14 +1,8 @@
 class_name GSSequenceValueGenerator
 extends GSValueGenerator
 
-var sequence: PackedFloat32Array = []:
-	set(value):
-		sequence = value
-		_find_low_high()
-
+var sequence: PackedFloat32Array = []
 var _tween: Tween = null
-var _low: float = 0.0
-var _high: float = 0.0
 
 
 func generate_values() -> void:
@@ -37,7 +31,7 @@ func get_value(t: float) -> float:
 	var low_value: float = sequence[idx_low]
 	var high_value: float = sequence[idx_high]
 	var alpha: float = fmod(idxf, 1.0)
-	return clampf(lerpf(low_value, high_value, alpha), _low, _high)
+	return clampf(lerpf(low_value, high_value, alpha), 0.0, 1.0)
 
 
 func play() -> void:
@@ -58,17 +52,3 @@ func stop() -> void:
 func _generate_value(t: float) -> void:
 	var value: float = get_value(t)
 	generator_value.emit(self, value)
-
-
-func _find_low_high() -> void:
-	if sequence.is_empty():
-		_low = 0.0
-		_high = 0.0
-		return
-	_low = 1.79769e308
-	_high = -1.79769e308
-	for value in sequence:
-		if value < _low:
-			_low = value
-		if value > _high:
-			_high = value

@@ -1,19 +1,40 @@
 extends Node
+## The gspot client implementation for interacting with a buttplug.io server.
+##
+## This client implementation handles all message communication with the buttplug.io server it 
+## connects to and relays messages back to the developer via signals. This is the main interface for
+## requesting devices ([method request_device_list]) and sending commands to activate features 
+## [method send_feature].
+##
+## @tutorial(Spec Reference): https://buttplug-spec.docs.buttplug.io/docs/spec
 
+## The spec version this client is compatible with.
 const MESSAGE_VERSION: int = 3
+## The default server host to connect to.
 const DEFAULT_HOST: String = "127.0.0.1"
+## The default server port to connect to.
 const DEFAULT_PORT: int = 12345
+## The default ping time.
 const DEFAULT_PING_TIME: int = 1000 * 30 # 30 seconds
+## A disclaimer that is displayed if any of the raw commands are used without first doing an opt-in 
+## through the project settings.
 const RAW_DISCLAIMER: String = "Raw commands are potentially dangerous and must be manually enabled."
+## The subdirectory where extensions are loaded from.
 const EXTENSIONS_DIR: String = "extensions"
 
+## Enumerates possible client states.
 enum ClientState {
+	## THe client is attempting to connect to the server.
 	CONNECTING,
+	## The client has connected to the server and passing initial information.
 	HANDSHAKING,
+	## The client has completed handshaking and is connected.
 	CONNECTED,
+	## The client is disconnected from the server.
 	DISCONNECTED,
 }
 
+## Enumerates possible server error codes.
 enum ErrorCode {
 	UNKNOWN = 0,
 	INIT = 1,
@@ -22,6 +43,7 @@ enum ErrorCode {
 	DEVICE = 4,
 }
 
+## Enumerates available logging levels.
 enum LogLevel {
 	VERBOSE,
 	DEBUG,
@@ -29,15 +51,25 @@ enum LogLevel {
 	ERROR,
 }
 
+## Emitted when the client connection state has changed.
 signal client_connection_changed(connected: bool)
+## Emitted when a device has been added to the device list.
 signal client_device_added(device: GSDevice)
+## Emitted when a device list has been received from the server.
 signal client_device_list_received(devices: Array[GSDevice])
+## Emitted when a device has been removed from the device list.
 signal client_device_removed(device: GSDevice)
+## Emitted when a client error has occurred.
 signal client_error(error: int, message: String)
+## Emitted when frame data has been received from the server.
 signal client_frame_received(frame: String)
+## Emitted when the client sends a message.
 signal client_message(message: String)
+## Emitted when a value has returned from [method raw_read].
 signal client_raw_reading(id: int, device_index: int, endpoint: String, data: PackedByteArray)
+## Emitted when a device scan has finished and [method get_devices] can be called.
 signal client_scan_finished()
+## Emitted when a value has returned from [method read_sensor].
 signal client_sensor_reading(
 	id: int, 
 	device_index: int, 
@@ -45,8 +77,10 @@ signal client_sensor_reading(
 	sensor_type: String, 
 	data: PackedInt32Array
 )
+## Emitted when a server error has occurred.
 signal server_error(id: int, error: int, message: String)
 
+## Defines the subdirectory where extensions are loaded from.
 var extensions_dir: String = EXTENSIONS_DIR
 var _hostname: String = DEFAULT_HOST
 var _port: int = 12345
@@ -93,82 +127,109 @@ func _process(delta: float) -> void:
 	_process_peer(delta)
 
 
+## Returns the client name as specified in the project settings. Defaults to 
+## [constant GSConstants.CLIENT_NAME].
 func get_client_name() -> String:
 	return GSUtil.get_project_value(GSConstants.PROJECT_SETTING_CLIENT_NAME, GSConstants.CLIENT_NAME)
 
 
+## Returns the client version as specified in the project settings. Defaults to 
+## [constant GSConstants.CLIENT_VERSION].
 func get_client_version() -> String:
 	return GSUtil.get_project_value(GSConstants.PROJECT_SETTING_CLIENT_VERSION, GSConstants.CLIENT_VERSION)
 
 
+## Returns a formatted client value in the format of: GSClient v2.1.
 func get_client_string() -> String:
 	return "%s v%s" % [ get_client_name(), get_client_version() ]
 
 
+## Determines if raw commands have been opted into.
 func is_raw_command_enabled() -> bool:
 	return GSUtil.get_project_value(GSConstants.PROJECT_SETTING_ENABLE_RAW_COMMANDS, false)
 
 
+## Returns the connected hostname.
 func get_hostname() -> String:
 	return _hostname
 
 
+## Returns the connected port.
 func get_port() -> int:
 	return _port
 
 
+## Returns the connected server's name.
 func get_server_name() -> String:
 	return _server_name
 
 
+## Returns the connected server's message version.
 func get_message_version() -> int:
 	return _message_version
 
 
+## Returns the connected server's max ping time.
 func get_max_ping_time() -> int:
 	return _max_ping_time
 
 
+## Returns the current [enum ClientState].
 func get_client_state() -> ClientState:
 	return _state
 
 
+## Determines if the client is currently connected to a server.
 func is_client_connected() -> bool:
 	return get_client_state() == ClientState.CONNECTED
 
 
+## Adds a message handler to handle the specified message type. This allows the developer override 
+## specific message functionality without needing to modify the GSClient itself.
 func add_message_handler(message_type: String, handler: Callable):
 	_message_handlers[message_type] = handler
 
 
+## Removes the message handler for the specified message type. Returns [code]true[/code] if it was 
+## removed successfully.
 func remove_message_handler(message_type: String) -> bool:
 	return _message_handlers.erase(message_type)
 
 
+## Sets the current [enum LogLevel]. Any logged messages below this level will not be sent via 
+## [signal client_message].
 func set_log_level(level: LogLevel) -> void:
 	_log_level = level
 
 
+## Gets the current [enum LogLevel].
 func get_log_level() -> LogLevel:
 	return _log_level
 
 
+## Logs a [enum LogLevel.VERBOSE] message.
 func logv(message: String) -> void:
 	_log(LogLevel.VERBOSE, message)
 
 
+## Logs a [enum LogLevel.DEBUG] message.
 func logd(message: String) -> void:
 	_log(LogLevel.DEBUG, message)
 
 
+## Logs a [enum LogLevel.WARN] message.
 func logw(message: String) -> void:
 	_log(LogLevel.WARN, message)
 
 
+## Logs a [enum LogLevel.ERROR] message with an optional [enum Error] code.
 func loge(message: String, error: Error = FAILED) -> void:
 	_error(error, message)
 
 
+## Starts the client and connects to the specified server hostname and port. If the connection does 
+## not happen within the specified [param timeout] value an error will be raised. If any 
+## [param options] are defined then a secure connection will be attempted.
 func start(
 	hostname: String = DEFAULT_HOST, 
 	port: int = DEFAULT_PORT, 
@@ -192,17 +253,20 @@ func start(
 	return resp
 
 
+## Stops the client and disconnects from a connected server.
 func stop() -> void:
 	_peer.close(1000, "Client requested shutdown.")
 	logv("%s stopping..." % get_client_string())
 
 
+## Begins a device scan. Any devices found will be emitted via [signal client_device_added].
 func scan_start() -> void:
 	logd("Starting device scan...")
 	send(GSStartScanning.new(_get_message_id()))
 	_scanning = true
 
 
+## Stops an active device scan.
 func scan_stop() -> void:
 	if not _scanning:
 		return
@@ -210,23 +274,28 @@ func scan_stop() -> void:
 	send(GSStopScanning.new(_get_message_id()))
 
 
+## Requests the server's known device list. The list is returned via 
+## [signal client_device_list_received].
 func request_device_list() -> void:
 	send(GSRequestDeviceList.new(_get_message_id()))
 	logd("Requesting device list...")
 
 
+## Gets a list of all known devices.
 func get_devices() -> Array[GSDevice]:
 	var list: Array[GSDevice] = []
 	list.assign(_device_map.values())
 	return list
 
 
+## Gets a device at the specified index.
 func get_device(device_index: int) -> GSDevice:
 	if _device_map.has(device_index):
 		return _device_map[device_index]
 	return null
 
 
+## Attempts to find a device by its display name. See [method GSDevice.get_display_name].
 func get_device_by_name(device_name: String) -> GSDevice:
 	var devices = get_devices().filter(func(device: GSDevice): return device.get_display_name() == device_name)
 	if devices.size() > 0:
@@ -234,6 +303,18 @@ func get_device_by_name(device_name: String) -> GSDevice:
 	return null
 
 
+## Sends a feature activation to the server. 
+## [br][br]
+## [param feature] is the feature to activate.
+## [br]
+## [param value] is a value between [code]0.0[/code] and [code]1.0[/code] where [code]0.0[/code] 
+## is no activation and [code]1.0[/code] is max activation.
+## [br]
+## [param duration] sets the duration, in seconds. A value of [code]0.0[/code] is always on.
+## [br]
+## [param clockwise] sets the direction of rotation. Only applicable for rotation actuators.
+## [br][br]
+## If the feature is a LinearCmd this method can be awaited on.
 func send_feature(
 	feature: GSFeature, 
 	value: float, 
@@ -261,6 +342,16 @@ func send_feature(
 			await send_linear(feature.device.device_index, feature.feature_index, duration, value)
 
 
+## Sends a scalar command to the server.
+## [br][br]
+## [param device_index] is the device's index.
+## [br]
+## [param feature_index] is the feature index on the device.
+## [br]
+## [param actuator_type] is the actuator type of the feature.
+## [br]
+## [param value] is a value between [code]0.0[/code] and [code]1.0[/code] where [code]0.0[/code] 
+## is no activation and [code]1.0[/code] is max activation.
 func send_scalar(
 	device_index: int, 
 	feature_index: int, 
@@ -274,37 +365,85 @@ func send_scalar(
 	send(GSScalarCmd.new(_get_message_id(), device_index, [ scalar ]))
 
 
-func send_linear(device_index: int, feature_index: int, duration: int, value: float) -> void:
+## Sends a linear command to the server.
+## [br][br]
+## [param device_index] is the device's index.
+## [br]
+## [param feature_index] is the feature index on the device.
+## [br]
+## [param duration] sets the duration, in seconds, that it should take for the device to reach the 
+## specified [param position].
+## [br]
+## [param position] is a value between [code]0.0[/code] and [code]1.0[/code] where [code]0.0[/code] 
+## is the lowest position the device can reach and [code]1.0[/code] is the highest position.
+func send_linear(device_index: int, feature_index: int, duration: int, position: float) -> void:
 	var vector := GSVector.new()
 	vector.index = feature_index
 	vector.duration = duration
-	vector.position = value
+	vector.position = position
 	send(GSLinearCmd.new(_get_message_id(), device_index, [ vector ]))
 	await create_tween().tween_interval(float(duration) / 1000.0).finished
 
 
-func send_rotate(device_index: int, feature_index: int, clockwise: bool, value: float) -> void:
+## Sends a rotate command to the server.
+## [br][br]
+## [param device_index] is the device's index.
+## [br]
+## [param feature_index] is the feature index on the device.
+## [br]
+## [param clockwise] sets the direction of rotation.
+## [br]
+## [param speed] is a value between [code]0.0[/code] and [code]1.0[/code] where [code]0.0[/code] 
+## is no movement and [code]1.0[/code] is max speed.
+func send_rotate(device_index: int, feature_index: int, clockwise: bool, speed: float) -> void:
 	var rotation := GSRotation.new()
 	rotation.index = feature_index
 	rotation.clockwise = clockwise
-	rotation.speed = value
+	rotation.speed = speed
 	send(GSRotateCmd.new(_get_message_id(), device_index, [ rotation ]))
 
 
+## Begins a sensor read of the specified device sensor. The read value will be returned via 
+## [signal client_sensor_reading]. 
+## [br][br]
+## This function returns the message ID that was sent to the server requesting the sensor value. 
+## This can be matched up with the ID value returned in [signal client_sensor_reading].
+## [br][br]
+## [param device_index] is the device's index.
+## [br]
+## [param sensor_index] is the sensor index on the device.
+## [br]
+## [param sensor_type] is the sensor type to read.
 func read_sensor(device_index: int, sensor_index: int, sensor_type: String) -> int:
 	var id = _get_message_id()
 	send(GSSensorReadCmd.new(id, device_index, sensor_index, sensor_type))
 	return id
 
 
+## Subscribes to a stream of data from the specified device sensor. The read values will be 
+## returned via [signal client_sensor_reading]. 
+## [br][br]
+## [param device_index] is the device's index.
+## [br]
+## [param sensor_index] is the sensor index on the device.
+## [br]
+## [param sensor_type] is the sensor type to read.
 func send_sensor_subscribe(device_index: int, sensor_index: int, sensor_type: String) -> void:
 	send(GSSensorSubscribeCmd.new(_get_message_id(), device_index, sensor_index, sensor_type))
 
 
+## Unsubscribes from a stream of data from the specified device sensor.
+## [br][br]
+## [param device_index] is the device's index.
+## [br]
+## [param sensor_index] is the sensor index on the device.
+## [br]
+## [param sensor_type] is the sensor type to read.
 func send_sensor_unsubscribe(device_index: int, sensor_index: int, sensor_type: String) -> void:
 	send(GSSensorUnsubscribeCmd.new(_get_message_id(), device_index, sensor_index, sensor_type))
 
 
+## Stops the specified device feature.
 func stop_feature(feature: GSFeature) -> void:
 	if not feature or not feature.device:
 		return
@@ -324,60 +463,37 @@ func stop_feature(feature: GSFeature) -> void:
 			pass
 
 
+## Stops all features of the specified device index.
 func stop_device(device_index: int) -> void:
 	send(GSStopDevice.new(_get_message_id(), device_index))
 
 
+## Stops all active devices.
 func stop_all_devices() -> void:
 	send(GSStopAllDevices.new(_get_message_id()))
 
 
-func raw_write(
-	device_index: int, 
-	endpoint: String, 
-	data: PackedByteArray, 
-	write_with_response: bool
-) -> void:
-	assert(is_raw_command_enabled(), RAW_DISCLAIMER)
-	send(GSRawWriteCmd.new(_get_message_id(), device_index, endpoint, data, write_with_response))
-
-
-func raw_read(
-	device_index: int, 
-	endpoint: String, 
-	expected_length: int, 
-	wait_for_data: bool
-) -> void:
-	assert(is_raw_command_enabled(), RAW_DISCLAIMER)
-	send(GSRawReadCmd.new(_get_message_id(), device_index, endpoint, expected_length, wait_for_data))
-
-
-func raw_subscribe(device_index: int, endpoint: String) -> void:
-	assert(is_raw_command_enabled(), RAW_DISCLAIMER)
-	send(GSRawSubscribeCmd.new(_get_message_id(), device_index, endpoint))
-
-
-func raw_unsubscribe(device_index: int, endpoint: String) -> void:
-	assert(is_raw_command_enabled(), RAW_DISCLAIMER)
-	send(GSRawUnsubscribeCmd.new(_get_message_id(), device_index, endpoint))
-
-
+## Sends the specified message to the server.
 func send(message: GSMessage) -> void:
 	_ack_map[message.get_id()] = message
 	logv("Sending message: %s" % message)
 	_peer.send_text(JSON.stringify([ message.serialize() ]))
 
 
+## Determines if the specified extension has been loaded.
 func has_ext(extension_name: String) -> bool:
 	return _extension_map.has(extension_name)
 
 
+## Returns the specified extension object.
 func ext(extension_name: String) -> Variant:
 	if has_ext(extension_name):
 		return _extension_map[extension_name]
 	return null
 
 
+## Calls a method on the specified extension. Returns [code]null[/code] if the extension or 
+## specified method does not exist.
 func ext_call(extension_name: String, method_name: String, args: Array = []) -> Variant:
 	var extension = ext(extension_name)
 	if not extension or not extension.has_method(method_name):
@@ -385,6 +501,7 @@ func ext_call(extension_name: String, method_name: String, args: Array = []) -> 
 	return extension.callv(method_name, args)
 
 
+## Locates and maps available extensions. Called automatically during [method Node._enter_tree].
 func init_extensions() -> void:
 	_extension_map.clear()
 	var script: Script = get_script()
@@ -392,6 +509,7 @@ func init_extensions() -> void:
 	_populate_extension_map(script_path, extensions_dir)
 
 
+## Attempts to load available extensions. Called automatically during [method Node._enter_tree].
 func load_extensions() -> void:
 	var extensions: Array[GSExtension] = _prioritize_extensions()
 	for ext: GSExtension in extensions:
@@ -403,11 +521,46 @@ func load_extensions() -> void:
 			logv("** Extension loaded!")
 
 
+## Unloads previously loaded extensions. Called automatically during [method Node._exit_tree].
 func unload_extensions() -> void:
 	var extensions: Array[GSExtension] = _prioritize_extensions()
 	for i in range(extensions.size() - 1, -1, -1):
 		logv("Unloading extension %s..." % extensions[i].get_extension_name())
 		extensions[i].unload_extension(self)
+
+
+## Raw command write. Must be opted into via the project settings.
+func raw_write(
+	device_index: int, 
+	endpoint: String, 
+	data: PackedByteArray, 
+	write_with_response: bool
+) -> void:
+	assert(is_raw_command_enabled(), RAW_DISCLAIMER)
+	send(GSRawWriteCmd.new(_get_message_id(), device_index, endpoint, data, write_with_response))
+
+
+## Raw command read. Must be opted into via the project settings.
+func raw_read(
+	device_index: int, 
+	endpoint: String, 
+	expected_length: int, 
+	wait_for_data: bool
+) -> void:
+	assert(is_raw_command_enabled(), RAW_DISCLAIMER)
+	send(GSRawReadCmd.new(_get_message_id(), device_index, endpoint, expected_length, wait_for_data))
+
+
+## Raw command subscribe. Must be opted into via the project settings.
+func raw_subscribe(device_index: int, endpoint: String) -> void:
+	assert(is_raw_command_enabled(), RAW_DISCLAIMER)
+	send(GSRawSubscribeCmd.new(_get_message_id(), device_index, endpoint))
+
+
+## Raw command unsubscribe. Must be opted into via the project settings.
+func raw_unsubscribe(device_index: int, endpoint: String) -> void:
+	assert(is_raw_command_enabled(), RAW_DISCLAIMER)
+	send(GSRawUnsubscribeCmd.new(_get_message_id(), device_index, endpoint))
 
 
 func _log(level: LogLevel, message: String) -> void:

@@ -1,24 +1,48 @@
 class_name GSActivePattern
 extends Node
+## An actively playing pattern for a specific [GSFeature].
+##
+## A GSActivePattern is automatically added to the scene tree and begins playing when created via 
+## [method GSPatterns.play]. Once the pattern finishes or [method stop] is called this node is 
+## removed automatically.
 
+## Emitted when the pattern is played.
 signal played(active: GSActivePattern)
+## Emitted when the pattern is paused.
 signal paused(active: GSActivePattern)
+## Emitted when the pattern is resumed from a previous pause.
 signal resumed(active: GSActivePattern)
+## Emitted when the pattern is stopped.
 signal stopped(active: GSActivePattern)
 
+## Enumerates the active pattern states.
 enum {
+	## The pattern is currently playing.
 	PLAYING,
+	## The pattern has been paused.
 	PAUSED,
+	## The pattern has been stopped.
 	STOPPED,
 }
 
+## The previously playing pattern before this one. If set it will be resumed after this finishes.
 var parent: GSActivePattern = null
+## The pattern to play.
 var pattern: GSPattern = null
+## The feature to use.
 var feature: GSFeature = null
+## The intensity modifier.
 var intensity: float = 1.0
-var sample_rate: float = GSUtil.get_project_value(GSConstants.PROJECT_SETTINGS_MESSAGE_RATE, GSConstants.MESSAGE_RATE)
+## The pattern sample rate, in seconds.
+var sample_rate: float = GSUtil.get_project_value(
+	GSConstants.PROJECT_SETTINGS_MESSAGE_RATE, 
+	GSConstants.MESSAGE_RATE
+)
+## Determines if the pattern will restart after it finishes.
 var loop: bool = false
+## The amount of time, in seconds, it takes for a linear command to reach its final position.
 var linear_duration: float = 0.0
+## The direction of rotation for rotate features.
 var rotate_clockwise: bool = true
 var _tt: float = 0.0
 var _sr: float = 0.0
@@ -52,20 +76,24 @@ func _process(delta: float) -> void:
 			stop()
 
 
+## Gets the current pattern state.
 func get_state() -> int:
 	return _state
 
 
+## Returns [code]true[/code] if the pattern is currently playing.
 func is_playing() -> bool:
 	return get_state() == PLAYING
 
 
+## Gets the intensity modifier value.
 func get_intensity() -> float:
 	return clampf(intensity, 0.0, 1.0)
 
 
+## Plays the pattern from a stopped state.
 func play() -> void:
-	if is_queued_for_deletion():
+	if get_state() != STOPPED or is_queued_for_deletion():
 		return
 	_state = PLAYING
 	played.emit(self)
@@ -77,21 +105,24 @@ func play() -> void:
 	)
 
 
+## Pauses the pattern if it is currently playing.
 func pause() -> void:
-	if _state == PLAYING:
+	if get_state() == PLAYING:
 		_state = PAUSED
 		GSClient.stop_feature(feature)
 		paused.emit(self)
 
 
+## Resumes the pattern if it is currently paused.
 func resume() -> void:
-	if _state == PAUSED:
+	if get_state() == PAUSED:
 		_state = PLAYING
 		resumed.emit(self)
 
 
+## Stops the pattern and queues it to be cleaned up.
 func stop() -> void:
-	if _state != STOPPED:
+	if get_state() != STOPPED:
 		_state = STOPPED
 		GSClient.stop_feature(feature)
 		stopped.emit(self)

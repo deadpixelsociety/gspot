@@ -1,4 +1,7 @@
 class_name GSConstants
+## Various constants used by [GSClient].
+##
+## Defines various default values and project settings used by [GSClient] and gspot in general.
 
 const CLIENT_NAME: String = "GSClient"
 const CLIENT_VERSION: String = "2.1"
