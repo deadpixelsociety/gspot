@@ -22,11 +22,8 @@ GSClient.request_device_list()
 await GSClient.client_device_list_received
 # Grab the first device.
 var device = GSClient.get_device(0)
-# Grab the first feature. We'll assume it's a vibrate function or something fun.
-# You will want something more robust.
-var feature = device.features[0]
-# Send the feature to the server, triggering it's action at max (1.0) power for 5 seconds.
-GSClient.send_feature(feature, 1.0, 5.0)
+# Send a vibration command to the device.
+device.vibrate()
 ```
 ## Log Levels
 Log levels let you control the verbosity of messages sent through the ```client_message``` signal. There are four different levels from most verbose to least: 
@@ -38,12 +35,17 @@ Log levels let you control the verbosity of messages sent through the ```client_
 ### Usage
 ```gdscript
 GSClient.set_log_level(GSClient.LogLevel.DEBUG)
+GSClient.logv("Verbose log message.")
+GSClient.logd("Debug log message.")
+GSClient.logw("Warn log message.")
+GSClient.loge("Error log message.")
 ```
 
 ## Project Settings
 Project settings are now available to configure how the GSClient identifies itself to buttplug.io servers, and if raw device commands are available.
 * ```gspot/client/client_name``` - The client name. Defaults to GSClient.
-* ```gspot/client/client_version``` - The client version. Currently defaults to 2.0.
+* ```gspot/client/client_version``` - The client version. Currently defaults to 2.1.
+* ```gspot/client/message_rate``` - The default device command rate which dictates how fast commands should be sent to a device. Currently defaults to 0.2 seconds.
 * ```gspot/client/enable_raw_commands``` - Determines if the raw command methods on GSClient are available or not. Defaults to false. Hidden by advanced settings.
 
 You can set these values in the Project Settings UI under the Gspot category. If you do not see them, try disabling and re-enabling the plugin.
@@ -53,7 +55,34 @@ These values are also accessible via the GSClient.
 GSClient.get_client_name() # GSClient
 GSClient.get_client_version() # 2.0
 GSClient.get_client_string() # GSClient v2.0
+GSDevice.get_message_rate()
 GSClient.is_raw_command_enabled() # false
+```
+
+## Extensions
+Extensions to GSClient can now be created and placed in the extensions subdirectory to be loaded. The first official extension is for Patterns.
+
+### Patterns
+The patterns extension lets you define a pattern via a sequence of float values or by using a Godot Curve. You can then play this pattern against any available device feature including looping, intensity control, pausing, resuming and stopping an active pattern.
+
+A [simple pattern editor](https://github.com/deadpixelsociety/gspot/blob/main/ui/pattern_editor/pattern_editor.tscn) is included in the developer control panel to create sequences. 
+
+Example pattern usage:
+```gdscript
+var device: GSDevice = GSClient.get_device_by_name("Lovense Calor")
+var feature: GSFeature = device.get_feature_by_actuator_type(GSActuatorTypes.VIBRATE)
+
+var patterns: GSPatterns = GSClient.ext(GSPatterns.NAME)
+
+var sequence: PackedFloat32Array = [ 0.0, 0.1, 0.2, 0.3, 1.0, 0.5, 0.7, 0.3, 0.0 ]
+# Creates a sequence pattern that plays over 10 seconds.
+patterns.create_sequence_pattern("My Pattern", 10.0, sequence)
+
+# Plays the previously added pattern with looping enabled and at half intensity.
+var active_pattern: GSActivePattern = patterns.play("My Pattern", feature, true, 0.5)
+...
+# Stops the looping pattern.
+active_pattern.stop()
 ```
 
 # Games Made Using gspot!
