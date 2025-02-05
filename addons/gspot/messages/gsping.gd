@@ -1,5 +1,5 @@
-extends GSMessage
 class_name GSPing
+extends GSMessage
 
 
 func _init(message_id: int) -> void:

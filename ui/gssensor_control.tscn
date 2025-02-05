@@ -1,8 +1,8 @@
 [gd_scene load_steps=4 format=3 uid="uid://ws8awmauqh54"]
 
-[ext_resource type="Theme" uid="uid://cnuol0ry2vobn" path="res://addons/gspot/assets/gspot_theme.tres" id="1_j7t5d"]
+[ext_resource type="Theme" uid="uid://cnuol0ry2vobn" path="res://assets/gspot_theme.tres" id="1_j7t5d"]
 [ext_resource type="Script" path="res://ui/gssensor_control.gd" id="2_2jg4r"]
-[ext_resource type="LabelSettings" uid="uid://cyuy5onflhliv" path="res://addons/gspot/assets/shadowed_label.tres" id="3_ljh3s"]
+[ext_resource type="LabelSettings" uid="uid://cyuy5onflhliv" path="res://assets/shadowed_label.tres" id="3_ljh3s"]
 
 [node name="GSSensorControl" type="GridContainer"]
 anchors_preset = 15

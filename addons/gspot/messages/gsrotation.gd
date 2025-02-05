@@ -1,11 +1,12 @@
-extends RefCounted
 class_name GSRotation
+extends RefCounted
 
-var index: int
+var index: int = -1
 var speed: float:
 	set(value):
 		speed = clampf(value, 0.0, 1.0)
-var clockwise: bool
+
+var clockwise: bool = true
 
 
 func serialize() -> Dictionary:

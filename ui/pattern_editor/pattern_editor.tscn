@@ -1,6 +1,6 @@
 [gd_scene load_steps=11 format=3 uid="uid://bm821vwhvx6im"]
 
-[ext_resource type="Theme" uid="uid://cnuol0ry2vobn" path="res://addons/gspot/assets/gspot_theme.tres" id="1_pfu8i"]
+[ext_resource type="Theme" uid="uid://cnuol0ry2vobn" path="res://assets/gspot_theme.tres" id="1_pfu8i"]
 [ext_resource type="Script" path="res://ui/pattern_editor/pattern_editor.gd" id="2_wmvfk"]
 [ext_resource type="Script" path="res://ui/pattern_editor/pattern_canvas.gd" id="3_nrm2g"]
 

@@ -1,6 +1,5 @@
-extends GSPattern
 class_name GSCurvePattern
-
+extends GSPattern
 
 var curve: Curve = null
 

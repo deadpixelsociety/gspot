@@ -1,15 +1,16 @@
-extends Node
 class_name GSActivePattern
-
+extends Node
 
 signal played(active: GSActivePattern)
 signal paused(active: GSActivePattern)
 signal resumed(active: GSActivePattern)
 signal stopped(active: GSActivePattern)
 
-
-enum {PLAYING,PAUSED,STOPPED}
-
+enum {
+	PLAYING,
+	PAUSED,
+	STOPPED,
+}
 
 var parent: GSActivePattern = null
 var pattern: GSPattern = null
@@ -19,7 +20,6 @@ var sample_rate: float = GSUtil.get_project_value(GSConstants.PROJECT_SETTINGS_M
 var loop: bool = false
 var linear_duration: float = 0.0
 var rotate_clockwise: bool = true
-
 var _tt: float = 0.0
 var _sr: float = 0.0
 var _state = STOPPED
@@ -37,7 +37,7 @@ func _process(delta: float) -> void:
 	_sr += delta
 	if _sr >= sample_rate and not is_queued_for_deletion():
 		_sr -= sample_rate
-		var t = clampf(0.0 if pattern.duration <= 0 else _tt / pattern.duration, 0.0, 1.0)
+		var t: float = clampf(0.0 if pattern.duration <= 0 else _tt / pattern.duration, 0.0, 1.0)
 		match feature.feature_command:
 			GSMessage.MESSAGE_TYPE_SCALAR_CMD:
 				GSClient.send_feature(feature, _get_value(t))

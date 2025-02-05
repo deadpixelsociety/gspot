@@ -1,5 +1,5 @@
-extends GSMessage
 class_name GSRawWriteCmd
+extends GSMessage
 
 
 func _init(

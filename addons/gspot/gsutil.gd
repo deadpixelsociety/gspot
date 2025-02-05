@@ -1,6 +1,13 @@
 class_name GSUtil
 
 
+static func get_project_value(property: String, default = null):
+	var value = ProjectSettings.get(property)
+	if value == null or (value is String and value == ""):
+		value = default
+	return value
+
+
 static func is_valid(obj) -> bool:
 	var valid = obj != null and is_instance_valid(obj)
 	if obj is Node:
@@ -8,8 +15,5 @@ static func is_valid(obj) -> bool:
 	return valid
 
 
-static func get_project_value(property: String, default = null):
-	var value = ProjectSettings.get(property)
-	if value == null or (value is String and value == ""):
-		value = default
-	return value
+static func ne(str: String) -> bool:
+	return str == null or str == ""

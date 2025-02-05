@@ -1,5 +1,5 @@
-extends RefCounted
 class_name GSExtension
+extends RefCounted
 
 
 func get_extension_name() -> String:

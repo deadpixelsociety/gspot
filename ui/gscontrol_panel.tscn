@@ -1,8 +1,8 @@
 [gd_scene load_steps=6 format=3 uid="uid://prwyw8cdhaos"]
 
 [ext_resource type="Script" path="res://ui/gscontrol_panel.gd" id="1_ahhjr"]
-[ext_resource type="Theme" uid="uid://cnuol0ry2vobn" path="res://addons/gspot/assets/gspot_theme.tres" id="1_oj7qg"]
-[ext_resource type="LabelSettings" uid="uid://cyuy5onflhliv" path="res://addons/gspot/assets/shadowed_label.tres" id="4_71pte"]
+[ext_resource type="Theme" uid="uid://cnuol0ry2vobn" path="res://assets/gspot_theme.tres" id="1_oj7qg"]
+[ext_resource type="LabelSettings" uid="uid://cyuy5onflhliv" path="res://assets/shadowed_label.tres" id="4_71pte"]
 [ext_resource type="PackedScene" uid="uid://bm821vwhvx6im" path="res://ui/pattern_editor/pattern_editor.tscn" id="4_e4s7h"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_qplhf"]

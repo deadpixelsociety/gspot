@@ -76,7 +76,7 @@ func _on_save_dialog_file_selected(path: String) -> void:
 	pattern.pattern_name = pattern_name
 	pattern.sequence = _pattern_canvas.get_samples()
 	pattern.duration = _time
-	var json = GSClient.ext_call(GSPatterns.NAME, "serialize_pattern", [ pattern ])
+	var json = GSPatterns.serialize_pattern(pattern)
 	var file = FileAccess.open(path, FileAccess.WRITE)
 	if not file:
 		OS.alert("Unable to save pattern: %s" % FileAccess.get_open_error())
