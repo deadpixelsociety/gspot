@@ -215,16 +215,23 @@ func request_device_list() -> void:
 	logd("Requesting device list...")
 
 
+func get_devices() -> Array[GSDevice]:
+	var list: Array[GSDevice] = []
+	list.assign(_device_map.values())
+	return list
+
+
 func get_device(device_index: int) -> GSDevice:
 	if _device_map.has(device_index):
 		return _device_map[device_index]
 	return null
 
 
-func get_devices() -> Array[GSDevice]:
-	var list: Array[GSDevice] = []
-	list.assign(_device_map.values())
-	return list
+func get_device_by_name(device_name: String) -> GSDevice:
+	var devices = get_devices().filter(func(device: GSDevice): device.get_display_name() == device_name)
+	if devices.size() > 0:
+		return devices.front()
+	return null
 
 
 func send_feature(

@@ -14,7 +14,7 @@ var feature: GSFeature
 
 
 func _ready() -> void:
-	GSClient.client_sensor_reading.connect(_on_client_sensor_reading)
+	feature.sensor_value_read.connect(_on_feature_sensor_value_read)
 	_sensor_type.text = feature.sensor_type
 	_index.text = str(feature.feature_index)
 	_setup_buttons()
@@ -34,18 +34,12 @@ func _setup_buttons():
 
 
 func _on_read_sensor_pressed() -> void:
-	GSClient.read_sensor(device.device_index, feature.feature_index, feature.sensor_type)
+	feature.read_sensor()
 
 
-func _on_client_sensor_reading(id: int, device_index: int, sensor_index: int, sensor_type: String, data: Array):
-	if device_index != device.device_index\
-		or sensor_index != feature.feature_index\
-		or sensor_type != feature.sensor_type:
-		return
-	match sensor_type:
-		GSMessage.SENSOR_TYPE_BATTERY:
-			if data.size() > 0:
-				_value.text = "%d" % data[0]
+func _on_feature_sensor_value_read(feature: GSFeature, data: PackedInt32Array):
+	if data.size() > 0:
+		_value.text = "%d" % data[0]
 
 
 func _on_subscribe_pressed() -> void:
