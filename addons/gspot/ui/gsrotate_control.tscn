@@ -4,50 +4,51 @@
 [ext_resource type="Script" path="res://addons/gspot/ui/gsrotate_control.gd" id="2_ry2mj"]
 [ext_resource type="LabelSettings" uid="uid://cyuy5onflhliv" path="res://addons/gspot/assets/shadowed_label.tres" id="3_sevyu"]
 
-[node name="GSRotateControl" type="GridContainer"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="GSRotateControl" type="VBoxContainer"]
+offset_top = 86.0
+offset_right = 73.0
+offset_bottom = 86.0
+script = ExtResource("2_ry2mj")
+
+[node name="GridContainer" type="GridContainer" parent="."]
+layout_mode = 2
 theme = ExtResource("1_3y3m1")
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 columns = 2
-script = ExtResource("2_ry2mj")
 
-[node name="Label" type="Label" parent="."]
+[node name="Label" type="Label" parent="GridContainer"]
 layout_mode = 2
 text = "Index"
 label_settings = ExtResource("3_sevyu")
 vertical_alignment = 1
 
-[node name="Index" type="Label" parent="."]
+[node name="Index" type="Label" parent="GridContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 label_settings = ExtResource("3_sevyu")
 vertical_alignment = 1
 
-[node name="Label2" type="Label" parent="."]
+[node name="Label2" type="Label" parent="GridContainer"]
 layout_mode = 2
 text = "Speed"
 label_settings = ExtResource("3_sevyu")
 vertical_alignment = 1
 
-[node name="Speed" type="HSlider" parent="."]
+[node name="Speed" type="HSlider" parent="GridContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 
-[node name="Label3" type="Label" parent="."]
+[node name="Label3" type="Label" parent="GridContainer"]
 layout_mode = 2
 text = "Clockwise"
 label_settings = ExtResource("3_sevyu")
 vertical_alignment = 1
 
-[node name="Clockwise" type="CheckBox" parent="."]
+[node name="Clockwise" type="CheckBox" parent="GridContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
 
-[connection signal="value_changed" from="Speed" to="." method="_on_speed_value_changed"]
+[connection signal="value_changed" from="GridContainer/Speed" to="." method="_on_speed_value_changed"]

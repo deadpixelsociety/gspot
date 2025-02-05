@@ -26,6 +26,7 @@ const SENSOR_CONTROL = preload("res://addons/gspot/ui/gssensor_control.tscn")
 @onready var _linear_container: VBoxContainer = %LinearContainer
 @onready var _sensor_container: VBoxContainer = %SensorContainer
 @onready var _log: RichTextLabel = %Log
+@onready var _pattern_editor_window: Window = %PatternEditorWindow
 
 
 func _ready() -> void:
@@ -202,7 +203,6 @@ func _add_scalars(device: GSDevice):
 	for feature in device.features:
 		if feature.feature_command == GSMessage.MESSAGE_TYPE_SCALAR_CMD:
 			var scalar = SCALAR_CONTROL.instantiate() as GSScalarControl
-			scalar.client = GSClient
 			scalar.device = device
 			scalar.feature = feature
 			_scalar_container.add_child(scalar)
@@ -214,7 +214,6 @@ func _add_linears(device: GSDevice):
 	for feature in device.features:
 		if feature.feature_command == GSMessage.MESSAGE_TYPE_LINEAR_CMD:
 			var linear = LINEAR_CONTROL.instantiate() as GSLinearControl
-			linear.client = GSClient
 			linear.device = device
 			linear.feature = feature
 			_linear_container.add_child(linear)
@@ -226,7 +225,6 @@ func _add_rotations(device: GSDevice):
 	for feature in device.features:
 		if feature.feature_command == GSMessage.MESSAGE_TYPE_ROTATE_CMD:
 			var rotate = ROTATE_CONTROL.instantiate() as GSRotateControl
-			rotate.client = GSClient
 			rotate.device = device
 			rotate.feature = feature
 			_rotation_container.add_child(rotate)
@@ -238,7 +236,6 @@ func _add_sensors(device: GSDevice):
 	for feature in device.features:
 		if feature.feature_command == GSMessage.MESSAGE_TYPE_SENSOR_READ_CMD:
 			var sensor = SENSOR_CONTROL.instantiate() as GSSensorControl
-			sensor.client = GSClient
 			sensor.device = device
 			sensor.feature = feature
 			_sensor_container.add_child(sensor)
@@ -250,3 +247,9 @@ func _clear_container(control: Control):
 		child.queue_free()
 
 
+func _on_open_pattern_editor_pressed() -> void:
+	_pattern_editor_window.show()
+
+
+func _on_pattern_editor_window_close_requested() -> void:
+	_pattern_editor_window.hide()

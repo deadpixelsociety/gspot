@@ -1,10 +1,11 @@
 extends Node
 
-const MESSAGE_VERSION = 3
-const DEFAULT_HOST = "127.0.0.1"
-const DEFAULT_PORT = 12345
-const DEFAULT_PING_TIME = 1000 * 30 # 30 seconds
-const RAW_DISCLAIMER = "Raw commands are potentially dangerous and must be manually enabled."
+const MESSAGE_VERSION: int = 3
+const DEFAULT_HOST: String = "127.0.0.1"
+const DEFAULT_PORT: int = 12345
+const DEFAULT_PING_TIME: int = 1000 * 30 # 30 seconds
+const RAW_DISCLAIMER: String = "Raw commands are potentially dangerous and must be manually enabled."
+const EXTENSIONS_DIR: String = "extensions"
 
 
 enum ClientState {
@@ -35,11 +36,10 @@ class FeatureDuration extends Node:
 	var feature: GSFeature
 	var duration: float = 0.0
 	
-	func kill() -> void:
-		duration = 0.0
-		var key = client._get_feature_key(feature)
-		client._durations.erase(key)
-		queue_free()
+	
+	func _ready() -> void:
+		name = "FeatureDuration-%s-%s" % [ feature.device.get_display_name(), feature.get_display_name() ]
+	
 	
 	func _process(delta: float) -> void:
 		if not client or not feature:
@@ -49,6 +49,14 @@ class FeatureDuration extends Node:
 			if duration <= 0.0:
 				client.stop_feature(feature)
 				kill()
+	
+	
+	func kill() -> void:
+		duration = 0.0
+		var key = client._get_feature_key(feature)
+		client._durations.erase(key)
+		queue_free()
+
 
 
 signal client_connection_changed(connected)
@@ -64,12 +72,13 @@ signal client_sensor_reading(id, device_index, sensor_index, sensor_type, data)
 signal server_error(id, error, message)
 
 
+var extensions_dir: String = EXTENSIONS_DIR
+
 var _hostname: String = DEFAULT_HOST
 var _port: int = 12345
 var _server_name: String
 var _message_version: int
 var _max_ping_time: int
-
 var _ack_map: Dictionary = {}
 var _device_map: Dictionary = {}
 var _id: int = 1
@@ -81,6 +90,7 @@ var _state: ClientState = ClientState.DISCONNECTED
 var _timeout: float = 0.0
 var _durations: Dictionary = {}
 var _log_level: LogLevel = LogLevel.VERBOSE
+var _extension_map: Dictionary = {}
 
 
 func _init() -> void:
@@ -100,12 +110,21 @@ func _process(delta: float) -> void:
 	_process_peer(delta)
 
 
+func _enter_tree() -> void:
+	init_extensions()
+	load_extensions()
+
+
+func _exit_tree() -> void:
+	unload_extensions()
+
+
 func get_client_name() -> String:
-	return _get_project_value(GSConstants.PROJECT_SETTING_CLIENT_NAME, GSConstants.CLIENT_NAME)
+	return GSUtil.get_project_value(GSConstants.PROJECT_SETTING_CLIENT_NAME, GSConstants.CLIENT_NAME)
 
 
 func get_client_version() -> String:
-	return _get_project_value(GSConstants.PROJECT_SETTING_CLIENT_VERSION, GSConstants.CLIENT_VERSION)
+	return GSUtil.get_project_value(GSConstants.PROJECT_SETTING_CLIENT_VERSION, GSConstants.CLIENT_VERSION)
 
 
 func get_client_string() -> String:
@@ -113,15 +132,8 @@ func get_client_string() -> String:
 
 
 func is_raw_command_enabled() -> bool:
-	return _get_project_value(GSConstants.PROJECT_SETTING_ENABLE_RAW_COMMANDS, false)
+	return GSUtil.get_project_value(GSConstants.PROJECT_SETTING_ENABLE_RAW_COMMANDS, false)
 
-
-func _get_project_value(property: String, default = null):
-	var value = ProjectSettings.get(property)
-	if value == null or value == "":
-		value = default
-	return value
-	
 
 func get_hostname() -> String:
 	return _hostname
@@ -334,6 +346,81 @@ func send(message: GSMessage):
 	_peer.send_text(JSON.stringify([ message.serialize() ]))
 
 
+func has_ext(extension_name: String) -> bool:
+	return _extension_map.has(extension_name)
+
+
+func ext(extension_name: String) -> Variant:
+	if has_ext(extension_name):
+		return _extension_map[extension_name]
+	return null
+
+
+func ext_call(extension_name: String, method_name: String, args: Array = []) -> Variant:
+	var extension = ext(extension_name)
+	if not extension or not extension.has_method(method_name):
+		return null
+	return extension.callv(method_name, args)
+
+
+func init_extensions() -> void:
+	_extension_map.clear()
+	var script: Script = get_script()
+	var script_path := script.resource_path.get_base_dir()
+	_populate_extension_map(script_path, extensions_dir)
+
+
+func load_extensions() -> void:
+	var extensions := _prioritize_extensions()
+	for ext: GSExtension in extensions:
+		_log(LogLevel.DEBUG, "Loading '%s'..." % ext.get_extension_name())
+		if not ext.load_extension(self):
+			_log(LogLevel.DEBUG, "!! Extension load failed and removed from extension list.")
+			_extension_map.erase(ext.get_extension_name())
+		else:
+			_log(LogLevel.DEBUG, "** Extension loaded!")
+
+
+func unload_extensions() -> void:
+	var extensions := _prioritize_extensions()
+	for i in range(extensions.size() - 1, -1, -1):
+		_log(LogLevel.DEBUG, "Unloading extension %s..." % extensions[i].get_extension_name())
+		extensions[i].unload_extension(self)
+
+
+func _populate_extension_map(current_dir: String, ext_dir: String) -> void:
+	var extension_path := "%s/%s" % [ current_dir, ext_dir ]
+	
+	var dir := DirAccess.open(extension_path)
+	if not dir:
+		return
+	
+	_log(LogLevel.DEBUG, "Loading extensions from %s..." % extension_path)
+	
+	dir.list_dir_begin()
+	var filename := dir.get_next()
+	while filename != "":
+		if dir.current_is_dir():
+			_populate_extension_map(extension_path, filename)
+		else:
+			if filename.contains(".gd"):
+				var res := ResourceLoader.load("%s/%s" % [ extension_path, filename ])
+				if res is Script:
+					var ext_script = res.new()
+					if ext_script is GSExtension and not ext_script.get_script() == GSExtension:
+						_log(LogLevel.DEBUG, "Found extension %s." % filename)
+						_extension_map[ext_script.get_extension_name()] = ext_script
+		filename = dir.get_next()
+
+
+func _prioritize_extensions() -> Array:
+	var extensions := _extension_map.values()
+	extensions.sort_custom(func(a: GSExtension, b: GSExtension):
+		return a.get_extension_priority() > b.get_extension_priority()
+	)
+	return extensions
+
+
 func _check_ping(delta: float):
 	if _max_ping_time <= 0.0:
 		return
@@ -523,13 +610,15 @@ func _get_feature_duration(feature: GSFeature) -> FeatureDuration:
 	var duration = _durations.get(key, null)
 	if not duration:
 		duration = FeatureDuration.new()
-		add_child(duration)
 		duration.client = self
 		duration.feature = feature
 		_durations[key] = duration
+		add_child(duration)
 	return duration
 
 
 func _create_feature_duration(feature: GSFeature, duration: float) -> void:
 	var feature_duration = _get_feature_duration(feature)
 	feature_duration.duration = duration
+
+

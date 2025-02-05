@@ -1,53 +1,59 @@
-[gd_scene load_steps=4 format=3 uid="uid://brjgug4dk6qvo"]
+[gd_scene load_steps=5 format=3 uid="uid://brjgug4dk6qvo"]
 
 [ext_resource type="Theme" uid="uid://cnuol0ry2vobn" path="res://addons/gspot/assets/gspot_theme.tres" id="1_txn20"]
 [ext_resource type="LabelSettings" uid="uid://cyuy5onflhliv" path="res://addons/gspot/assets/shadowed_label.tres" id="2_aqhky"]
 [ext_resource type="Script" path="res://addons/gspot/ui/gsscalar_control.gd" id="2_nvjjo"]
+[ext_resource type="PackedScene" uid="uid://do6sglkfvaaps" path="res://addons/gspot/ui/pattern_panel.tscn" id="4_u32bt"]
 
-[node name="GSScalarControl" type="GridContainer"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="GSScalarControl" type="VBoxContainer"]
+offset_right = 207.0
+offset_bottom = 202.0
+theme_override_constants/separation = 8
+script = ExtResource("2_nvjjo")
+
+[node name="GridContainer" type="GridContainer" parent="."]
+layout_mode = 2
 theme = ExtResource("1_txn20")
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 columns = 2
-script = ExtResource("2_nvjjo")
 
-[node name="Label" type="Label" parent="."]
+[node name="Label" type="Label" parent="GridContainer"]
 layout_mode = 2
 text = "Actuator Type"
 label_settings = ExtResource("2_aqhky")
 vertical_alignment = 1
 
-[node name="ActuatorType" type="Label" parent="."]
+[node name="ActuatorType" type="Label" parent="GridContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 label_settings = ExtResource("2_aqhky")
 vertical_alignment = 1
 
-[node name="Label2" type="Label" parent="."]
+[node name="Label2" type="Label" parent="GridContainer"]
 layout_mode = 2
 text = "Index"
 label_settings = ExtResource("2_aqhky")
 vertical_alignment = 1
 
-[node name="Index" type="Label" parent="."]
+[node name="Index" type="Label" parent="GridContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 label_settings = ExtResource("2_aqhky")
 vertical_alignment = 1
 
-[node name="Label3" type="Label" parent="."]
+[node name="Label3" type="Label" parent="GridContainer"]
 layout_mode = 2
 text = "Scalar"
 label_settings = ExtResource("2_aqhky")
 vertical_alignment = 1
 
-[node name="Scalar" type="HSlider" parent="."]
+[node name="Scalar" type="HSlider" parent="GridContainer"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 
-[connection signal="value_changed" from="Scalar" to="." method="_on_scalar_value_changed"]
+[node name="PatternPanel" parent="." instance=ExtResource("4_u32bt")]
+layout_mode = 2
+
+[connection signal="value_changed" from="GridContainer/Scalar" to="." method="_on_scalar_value_changed"]
