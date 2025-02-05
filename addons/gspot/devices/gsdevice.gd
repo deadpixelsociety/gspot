@@ -76,3 +76,55 @@ func get_message_rate() -> float:
 	if rate <= 0.0:
 		return GSUtil.get_project_value(GSConstants.PROJECT_SETTINGS_MESSAGE_RATE, GSConstants.MESSAGE_RATE)
 	return rate
+
+
+func vibrate(intensity: float, duration: float = 0.0) -> GSFeature:
+	var feature: GSFeature = get_feature_by_actuator_type(GSActuatorType.VIBRATE)
+	if not feature:
+		return null
+	GSClient.send_feature(feature, clampf(intensity, 0.0, 1.0), duration)
+	return feature
+
+
+func rotate(speed: float, clockwise: bool = true, duration: float = 0.0) -> GSFeature:
+	var feature: GSFeature = get_feature_by_actuator_type(GSActuatorType.ROTATE)
+	if not feature:
+		return null
+	GSClient.send_feature(feature, clampf(speed, 0.0, 1.0), duration, clockwise)
+	return feature
+
+
+func oscillate(intensity: float, duration: float = 0.0) -> GSFeature:
+	var feature: GSFeature = get_feature_by_actuator_type(GSActuatorType.OSCILLATE)
+	if not feature:
+		return null
+	GSClient.send_feature(feature, clampf(intensity, 0.0, 1.0), duration)
+	return feature
+
+
+func constrict(strength: float, duration: float = 0.0) -> GSFeature:
+	var feature: GSFeature = get_feature_by_actuator_type(GSActuatorType.CONSTRICT)
+	if not feature:
+		return null
+	GSClient.send_feature(feature, clampf(strength, 0.0, 1.0), duration)
+	return feature
+
+
+func inflate(strength: float, duration: float = 0.0) -> GSFeature:
+	var feature: GSFeature = get_feature_by_actuator_type(GSActuatorType.INFLATE)
+	if not feature:
+		return null
+	GSClient.send_feature(feature, clampf(strength, 0.0, 1.0), duration)
+	return feature
+
+
+func position(position: float, duration: float) -> GSFeature:
+	var feature: GSFeature = get_feature_by_actuator_type(GSActuatorType.POSITION)
+	if not feature:
+		return null
+	await GSClient.send_feature(feature, clampf(position, 0.0, 1.0), duration)
+	return feature
+
+
+func stop() -> void:
+	GSClient.stop_device(device_index)
