@@ -228,7 +228,7 @@ func get_device(device_index: int) -> GSDevice:
 
 
 func get_device_by_name(device_name: String) -> GSDevice:
-	var devices = get_devices().filter(func(device: GSDevice): device.get_display_name() == device_name)
+	var devices = get_devices().filter(func(device: GSDevice): return device.get_display_name() == device_name)
 	if devices.size() > 0:
 		return devices.front()
 	return null
