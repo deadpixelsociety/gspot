@@ -1,5 +1,5 @@
-extends GSMessage
 class_name GSSensorUnsubscribeCmd
+extends GSMessage
 
 
 func _init(message_id: int, device_index: int, sensor_index: int, sensor_type: String) -> void:

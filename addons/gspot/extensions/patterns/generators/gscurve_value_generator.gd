@@ -1,6 +1,5 @@
-extends GSValueGenerator
 class_name  GSCurveValueGenerator
-
+extends GSValueGenerator
 
 var curve: Curve = null
 var _tween: Tween = null
@@ -23,7 +22,7 @@ func generate_values() -> void:
 func _generate_value(t: float) -> void:
 	if not curve:
 		return
-	var value = get_value(t)
+	var value: float = get_value(t)
 	generator_value.emit(self, value)
 
 

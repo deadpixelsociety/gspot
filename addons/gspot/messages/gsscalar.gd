@@ -1,10 +1,11 @@
-extends RefCounted
 class_name GSScalar
+extends RefCounted
 
-var index: int
+var index: int = -1
 var scalar: float:
 	set(value):
 		scalar = clampf(value, 0.0, 1.0)
+
 var actuator_type: String
 
 

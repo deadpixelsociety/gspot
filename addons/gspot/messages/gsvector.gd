@@ -1,7 +1,7 @@
-extends RefCounted
 class_name GSVector
+extends RefCounted
 
-var index: int
+var index: int = -1
 var duration: int
 var position: float:
 	set(value):

@@ -1,6 +1,5 @@
-extends GSPattern
 class_name  GSSequencePattern
-
+extends GSPattern
 
 var sequence: PackedFloat32Array = []
 

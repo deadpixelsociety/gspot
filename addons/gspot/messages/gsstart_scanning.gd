@@ -1,5 +1,5 @@
-extends GSMessage
 class_name GSStartScanning
+extends GSMessage
 
 
 func _init(message_id: int) -> void:

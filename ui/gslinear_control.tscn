@@ -1,9 +1,9 @@
 [gd_scene load_steps=5 format=3 uid="uid://b53sf3ytfone1"]
 
-[ext_resource type="Theme" uid="uid://cnuol0ry2vobn" path="res://addons/gspot/assets/gspot_theme.tres" id="1_dekfd"]
-[ext_resource type="Script" path="res://addons/gspot/ui/gslinear_control.gd" id="2_xs70b"]
-[ext_resource type="LabelSettings" uid="uid://cyuy5onflhliv" path="res://addons/gspot/assets/shadowed_label.tres" id="3_kwsa5"]
-[ext_resource type="PackedScene" uid="uid://do6sglkfvaaps" path="res://addons/gspot/ui/pattern_panel.tscn" id="4_lpejh"]
+[ext_resource type="Theme" uid="uid://cnuol0ry2vobn" path="res://assets/gspot_theme.tres" id="1_dekfd"]
+[ext_resource type="Script" path="res://ui/gslinear_control.gd" id="2_xs70b"]
+[ext_resource type="LabelSettings" uid="uid://cyuy5onflhliv" path="res://assets/shadowed_label.tres" id="3_kwsa5"]
+[ext_resource type="PackedScene" uid="uid://do6sglkfvaaps" path="res://ui/pattern_panel.tscn" id="4_lpejh"]
 
 [node name="GSLinearControl" type="VBoxContainer"]
 offset_right = 206.0

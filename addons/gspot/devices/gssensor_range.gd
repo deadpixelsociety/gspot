@@ -1,8 +1,8 @@
-extends RefCounted
 class_name GSSensorRange
+extends RefCounted
 
-var sensor_range_min: int
-var sensor_range_max: int
+var sensor_range_min: int = -1
+var sensor_range_max: int = -1
 
 
 func _init(range_min: int = 0, range_max: int = 0) -> void:

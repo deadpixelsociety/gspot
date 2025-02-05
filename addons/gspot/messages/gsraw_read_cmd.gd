@@ -1,5 +1,5 @@
-extends GSMessage
 class_name GSRawReadCmd
+extends GSMessage
 
 
 func _init(

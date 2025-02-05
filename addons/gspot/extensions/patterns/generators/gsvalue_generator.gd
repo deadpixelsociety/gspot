@@ -1,10 +1,8 @@
-extends RefCounted
 class_name GSValueGenerator
-
+extends RefCounted
 
 signal generator_finished(generator: GSValueGenerator)
 signal generator_value(generator: GSValueGenerator, value: float)
-
 
 var duration: float = 0.0
 
