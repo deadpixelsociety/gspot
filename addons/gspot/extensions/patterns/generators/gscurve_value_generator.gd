@@ -29,7 +29,7 @@ func _generate_value(t: float) -> void:
 func get_value(t: float) -> float:
 	if not curve:
 		return 0.0
-	return clampf(curve.sample(t), curve.min_value, curve.max_value)
+	return clampf(curve.sample(t), 0.0, 1.0)
 
 
 func play() -> void:
