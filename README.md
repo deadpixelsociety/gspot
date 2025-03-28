@@ -13,7 +13,8 @@ A [client control panel](addons/gspot/ui/gscontrol_panel.tscn) is provided for t
 ## Quick Example
 ```gdscript
 # Connect to the device server.
-GSClient.start("localhost", 12345)
+# Prefer using an IP address when available. Websocket DNS resolution through Godot seems to be very slow.
+GSClient.start("127.0.0.1", 12345)
 # Wait for connection.
 await GSClient.client_connection_changed
 # Request the device list from the server.
