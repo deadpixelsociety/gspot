@@ -791,7 +791,7 @@ func _populate_extension_map(current_dir: String, ext_dir: String) -> void:
 		if dir.current_is_dir():
 			_populate_extension_map(extension_path, filename)
 		else:
-			if filename.contains(".gd"):
+			if filename.contains(".gd") and not filename.contains(".uid"):
 				var res = ResourceLoader.load("%s/%s" % [ extension_path, filename ])
 				if res is Script:
 					var ext_script = res.new()

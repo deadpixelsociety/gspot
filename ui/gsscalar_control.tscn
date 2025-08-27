@@ -2,7 +2,7 @@
 
 [ext_resource type="Theme" uid="uid://cnuol0ry2vobn" path="res://assets/gspot_theme.tres" id="1_txn20"]
 [ext_resource type="LabelSettings" uid="uid://cyuy5onflhliv" path="res://assets/shadowed_label.tres" id="2_aqhky"]
-[ext_resource type="Script" path="res://ui/gsscalar_control.gd" id="2_nvjjo"]
+[ext_resource type="Script" uid="uid://cqepskwyeguj6" path="res://ui/gsscalar_control.gd" id="2_nvjjo"]
 [ext_resource type="PackedScene" uid="uid://do6sglkfvaaps" path="res://ui/pattern_panel.tscn" id="4_u32bt"]
 
 [node name="GSScalarControl" type="VBoxContainer"]
