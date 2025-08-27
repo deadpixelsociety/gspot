@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://do6sglkfvaaps"]
 
-[ext_resource type="Script" path="res://ui/pattern_panel.gd" id="1_p4chd"]
+[ext_resource type="Script" uid="uid://yalm7k2ekkbh" path="res://ui/pattern_panel.gd" id="1_p4chd"]
 [ext_resource type="LabelSettings" uid="uid://cyuy5onflhliv" path="res://assets/shadowed_label.tres" id="2_wwmwy"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p56hh"]
