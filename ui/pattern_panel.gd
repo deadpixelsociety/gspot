@@ -47,5 +47,5 @@ func _on_open_dialog_file_selected(path: String) -> void:
 		OS.alert("Unable to parse pattern file: %s" % path)
 		return
 	var patterns: GSPatterns = GSClient.ext(GSPatterns.NAME)
-	patterns.add(pattern)
+	patterns.add_pattern(pattern)
 	patterns.play(pattern.pattern_name, feature)
