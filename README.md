@@ -1,93 +1,139 @@
 # gspot
 
-![gspot logo](logo.png) 
+gspot is a Godot 4 plugin for controlling intimate haptic devices through the [Buttplug protocol](https://buttplug.io/docs/spec/). A compatible server is required. [Intiface Central](https://intiface.com/central/) is the recommended local server and normally listens on `127.0.0.1:12345`.
 
-A Godot 4 Plugin for interacting with intimate haptic devices via the [buttplug.io](https://buttplug.io/) interface.
+The 3.0 plugin uses Buttplug protocol v4 by default and retains protocol v3 compatibility.
 
-**This plugin provides a buttplug.io standard compatibile client implementation. To interact with devices a server is also required. See [Intiface Central](https://intiface.com/central/).**
+## Installation
 
-Review the [protocol specification](https://buttplug-spec.docs.buttplug.io/docs/spec) for an idea of how to interact with this plugin and proper device flow.
+1. Copy or clone this repository into your project as `addons/gspot`.
+2. Enable **gspot** in **Project Settings > Plugins**.
+3. Start Intiface Central or another compatible WebSocket server.
 
-A [client control panel](addons/gspot/ui/gscontrol_panel.tscn) is provided for testing devices and getting familiar with the client.
+The plugin registers `GSClient` as an autoload singleton. The demo control panel is available at [`ui/gscontrol_panel.tscn`](ui/gscontrol_panel.tscn).
 
-## Quick Example
-```gdscript
-# Connect to the device server.
-# Prefer using an IP address when available. Websocket DNS resolution through Godot seems to be very slow.
-GSClient.start("127.0.0.1", 12345)
-# Wait for connection.
-await GSClient.client_connection_changed
-# Request the device list from the server.
+## Connection workflow
+
+~~~gdscript
+var result := GSClient.start("127.0.0.1", 12345)
+if result != OK:
+	return
+
+var connected: bool = await GSClient.client_connection_changed
+if not connected:
+	return
+
+print("Protocol %d.%d" % [
+	GSClient.get_protocol_version_major(),
+	GSClient.get_protocol_version_minor(),
+])
+
 GSClient.request_device_list()
-# Wait for devices to arrive.
 await GSClient.client_device_list_received
-# Grab the first device.
-var device = GSClient.get_device(0)
-# Send a vibration command to the device.
-device.vibrate()
-```
-## Log Levels
-Log levels let you control the verbosity of messages sent through the ```client_message``` signal. There are four different levels from most verbose to least: 
-* ```VERBOSE``` - All messages are emitted.
-* ```DEBUG``` - Debug level messages include things like connection state and message contents, but exclude client state messages.
-* ```WARN``` - Warning level messages include unexpected issues that can be recovered from or ignored.
-* ```ERROR``` - Error level messages include unexpected issues that cannot be recovered from. These are also emitted through ```client_error```.
 
-### Usage
-```gdscript
-GSClient.set_log_level(GSClient.LogLevel.DEBUG)
-GSClient.logv("Verbose log message.")
-GSClient.logd("Debug log message.")
-GSClient.logw("Warn log message.")
-GSClient.loge("Error log message.")
-```
+var device: GSDevice = GSClient.get_device(0)
+if device:
+	device.vibrate(0.5)
 
-## Project Settings
-Project settings are now available to configure how the GSClient identifies itself to buttplug.io servers, and if raw device commands are available.
-* ```gspot/client/client_name``` - The client name. Defaults to GSClient.
-* ```gspot/client/client_version``` - The client version. Currently defaults to 2.1.
-* ```gspot/client/message_rate``` - The default device command rate which dictates how fast commands should be sent to a device. Currently defaults to 0.2 seconds.
-* ```gspot/client/enable_raw_commands``` - Determines if the raw command methods on GSClient are available or not. Defaults to false. Hidden by advanced settings.
+GSClient.stop()
+~~~
 
-You can set these values in the Project Settings UI under the Gspot category. If you do not see them, try disabling and re-enabling the plugin.
+`GSClient.get_devices()` returns the current device objects. Use `get_device_by_name()` when an index is not stable for the application.
 
-These values are also accessible via the GSClient.
-```gdscript
-GSClient.get_client_name() # GSClient
-GSClient.get_client_version() # 2.0
-GSClient.get_client_string() # GSClient v2.0
-GSDevice.get_message_rate()
-GSClient.is_raw_command_enabled() # false
-```
+Use `GSClient.scan_start()` and `GSClient.scan_stop()` for server-side scanning. `client_scan_finished` indicates that a scan has ended.
 
-## Extensions
-Extensions to GSClient can now be created and placed in the extensions subdirectory to be loaded. The first official extension is for Patterns.
+## Protocol modes
 
-### Patterns
-The patterns extension lets you define a pattern via a sequence of float values or by using a Godot Curve. You can then play this pattern against any available device feature including looping, intensity control, pausing, resuming and stopping an active pattern.
+`gspot/client/protocol_mode` accepts `Auto`, `Spec v4`, and `Spec v3`. The equivalent runtime enum is `GSClient.ProtocolMode.AUTO`, `SPEC_V4`, or `SPEC_V3`.
 
-A [simple pattern editor](https://github.com/deadpixelsociety/gspot/blob/main/ui/pattern_editor/pattern_editor.tscn) is included in the developer control panel to create sequences. 
+Auto mode requests v4.0 first. It retries one v3 handshake only when the v4 handshake returns `ERROR_INIT`. Forced modes never fall back. `get_protocol_version_major()` and `get_protocol_version_minor()` report the negotiated version. `get_message_version()` remains as a deprecated major-version alias.
 
-Example pattern usage:
-```gdscript
-var device: GSDevice = GSClient.get_device_by_name("Lovense Calor")
-var feature: GSFeature = device.get_feature_by_actuator_type(GSActuatorTypes.VIBRATE)
+## Device and feature controls
 
-var patterns: GSPatterns = GSClient.ext(GSPatterns.NAME)
+`GSDevice` keeps normalized controls in the `0.0` to `1.0` range. v4 integer ranges are applied internally from each feature's advertised capability.
 
-var sequence: PackedFloat32Array = [ 0.0, 0.1, 0.2, 0.3, 1.0, 0.5, 0.7, 0.3, 0.0 ]
-# Creates a sequence pattern that plays over 10 seconds.
-patterns.create_sequence_pattern("My Pattern", 10.0, sequence)
+~~~gdscript
+device.vibrate(0.8)
+device.rotate(0.5, true)
+device.oscillate(0.4)
+device.constrict(0.6)
+device.spray(1.0)
+device.set_led(0.25)
+device.temperature(-0.5) # cooling; positive values heat
+await device.position(0.5, 0.75) # duration in seconds
+device.stop()
+~~~
 
-# Plays the previously added pattern with looping enabled and at half intensity.
-var active_pattern: GSActivePattern = patterns.play("My Pattern", feature, true, 0.5)
-...
-# Stops the looping pattern.
-active_pattern.stop()
-```
+High-level device and feature duration arguments use seconds. Position durations are converted to protocol milliseconds internally. `Inflate` is retained for v3 devices only.
 
-# Games Made Using gspot!
-* [Mousegun](https://shinlalala.itch.io/mousegun) by [Shinlalala](https://shinlalala.itch.io/) - Mousegun is a retro FPS in which you take control of the titular character in an action filled adventure.
+For capability-specific code, inspect `GSFeature.output_type`, `input_type`, `value_range`, `duration_range`, and `input_commands`. `can_read()` and `can_subscribe()` report the input operations advertised by the server.
 
-# Attribution
-The gspot icon was created by [Kokota](https://thenounproject.com/kokota.icon/) and distributed under the [Creative Commons Attribution License (CC BY 3.0)](https://creativecommons.org/licenses/by/3.0/)
+Supported v4 output types are Vibrate, Rotate, Oscillate, Constrict, Spray, Temperature, Led, Position, and HwPositionWithDuration. Supported input types are Battery, Rssi, Pressure, and Button.
+
+## Sensors
+
+~~~gdscript
+for feature in device.features:
+    if not feature.is_input():
+        continue
+    if feature.can_read():
+        feature.read_sensor()
+    if feature.can_subscribe():
+        GSClient.send_sensor_subscribe(
+            device.device_index,
+            feature.feature_index,
+            feature.input_type,
+        )
+~~~
+
+Readings are available through `feature.sensor_value_read(feature, data)` or the existing `GSClient.client_sensor_reading` signal. `data` is a `PackedInt32Array`. Stop subscriptions with `send_sensor_unsubscribe()` or `feature.stop()`.
+
+## Stop and error handling
+
+Use `GSClient.stop_feature(feature)`, `GSClient.stop_device(device_index)`, or `GSClient.stop_all_devices()` for explicit stops. `GSClient.stop()` sends v4 `Disconnect` and closes the transport after the server acknowledges it.
+
+Use `client_message` for log output, `client_error` for local errors, and `server_error` for protocol errors. Set verbosity with `GSClient.set_log_level(GSClient.LogLevel.DEBUG)`.
+
+Important signals are `client_connection_changed`, `client_device_list_received`, `client_device_added`, `client_device_removed`, `client_scan_finished`, `client_sensor_reading`, and `client_raw_reading`.
+
+## Project settings
+
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `gspot/client/client_name` | `GSClient` | Name sent during the handshake. |
+| `gspot/client/client_version` | `3.0.0` | Client version sent during the handshake. |
+| `gspot/client/message_rate` | `0.2` seconds | Default interval returned by `GSDevice.get_message_rate()`. |
+| `gspot/client/enable_raw_commands` | `false` | Opts into deprecated v3 raw commands. |
+| `gspot/client/protocol_mode` | `Auto` | Selects protocol negotiation mode. |
+
+Raw methods require `gspot/client/enable_raw_commands=true` and are available only after a v3 handshake. Under v4 they report `ERR_UNAVAILABLE`. Direct construction of v3 wire-message classes is not adapted to v4.
+
+## Patterns extension
+
+The bundled `patterns` extension supports sequence and Curve patterns. Pattern durations and `linear_duration` values are expressed in seconds; linear durations are converted to milliseconds when commands are sent.
+
+~~~gdscript
+var feature := device.get_feature_by_actuator_type(GSActuatorType.VIBRATE)
+var patterns := GSClient.ext(GSPatterns.NAME) as GSPatterns
+patterns.create_sequence_pattern("Pulse", 10.0, PackedFloat32Array([0.0, 1.0, 0.0]))
+var active := patterns.play("Pulse", feature, true, 0.5)
+
+active.stop()
+~~~
+
+## Development and testing
+
+~~~text
+godot --headless --path . --script res://tests/run_tests.gd
+~~~
+
+The fixture runner covers v3 and v4 serialization without physical hardware. Test live discovery, commands, subscriptions, and disconnect behavior against a local server when changing protocol code. The `spec-3.0` branch remains the 2.1.1 maintenance baseline.
+
+The headless runner resolves the `GSClient` autoload from the scene tree and creates a local fallback when an editor plugin session has not registered it.
+For a host project, enable the plugin once or add `GSClient` under Project Settings > Globals > Autoload, pointing to `res://addons/gspot/gsclient.gd`.
+
+## Attribution
+
+The gspot icon was created by [Kokota](https://thenounproject.com/kokota.icon/) and distributed under the [Creative Commons Attribution License (CC BY 3.0)](https://creativecommons.org/licenses/by/3.0/).
+
+Games made using gspot include [Mousegun](https://shinlalala.itch.io/mousegun) by [Shinlalala](https://shinlalala.itch.io/).

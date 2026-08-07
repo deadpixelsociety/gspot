@@ -62,13 +62,16 @@ func _process(delta: float) -> void:
 	if _sr >= sample_rate and not is_queued_for_deletion():
 		_sr -= sample_rate
 		var t: float = clampf(0.0 if pattern.duration <= 0 else _tt / pattern.duration, 0.0, 1.0)
+		var client: Variant = GSUtil.get_client()
+		if not client:
+			return
 		match feature.feature_command:
 			GSMessage.MESSAGE_TYPE_SCALAR_CMD:
-				GSClient.send_feature(feature, _get_value(t))
+				client.send_feature(feature, _get_value(t))
 			GSMessage.MESSAGE_TYPE_ROTATE_CMD:
-				GSClient.send_feature(feature, _get_value(t), 0.0, rotate_clockwise)
+				client.send_feature(feature, _get_value(t), 0.0, rotate_clockwise)
 			GSMessage.MESSAGE_TYPE_LINEAR_CMD:
-				await GSClient.send_feature(feature, _get_value(t), linear_duration * 1000.0)
+				await client.send_feature(feature, _get_value(t), linear_duration)
 	if _tt >= pattern.duration:
 		if loop:
 			_tt = 0.0
@@ -97,19 +100,18 @@ func play() -> void:
 		return
 	_state = PLAYING
 	played.emit(self)
-	await GSClient.send_feature(
-		feature, 
-		_get_value(0.0),
-		linear_duration * 1000.0, 
-		rotate_clockwise
-	)
+	var client: Variant = GSUtil.get_client()
+	if client:
+		await client.send_feature(feature, _get_value(0.0), linear_duration, rotate_clockwise)
 
 
 ## Pauses the pattern if it is currently playing.
 func pause() -> void:
 	if get_state() == PLAYING:
 		_state = PAUSED
-		GSClient.stop_feature(feature)
+		var client: Variant = GSUtil.get_client()
+		if client:
+			client.stop_feature(feature)
 		paused.emit(self)
 
 
@@ -124,7 +126,9 @@ func resume() -> void:
 func stop() -> void:
 	if get_state() != STOPPED:
 		_state = STOPPED
-		GSClient.stop_feature(feature)
+		var client: Variant = GSUtil.get_client()
+		if client:
+			client.stop_feature(feature)
 		stopped.emit(self)
 		queue_free()
 

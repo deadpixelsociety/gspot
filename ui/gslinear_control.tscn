@@ -31,15 +31,16 @@ vertical_alignment = 1
 
 [node name="Label2" type="Label" parent="GridContainer"]
 layout_mode = 2
-text = "Duration (ms)"
+text = "Duration (s)"
 label_settings = ExtResource("3_kwsa5")
 vertical_alignment = 1
 
 [node name="Duration" type="SpinBox" parent="GridContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-max_value = 9999.0
-value = 1000.0
+max_value = 10.0
+step = 0.1
+value = 1.0
 
 [node name="Label3" type="Label" parent="GridContainer"]
 layout_mode = 2

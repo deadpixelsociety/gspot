@@ -6,7 +6,7 @@ extends RefCounted
 ## as well as the features it contains. Also present are helper methods to quickly access device 
 ## features such as [method vibrate], [method rotate], and [method position].
 ##
-## @tutorial(Spec Reference): https://buttplug-spec.docs.buttplug.io/docs/spec/enumeration#devicelist
+## @tutorial(Spec Reference): https://buttplug.io/docs/spec/device_information/
 
 ## The device name as given by the device itself.
 var device_name: String
@@ -23,7 +23,9 @@ var features: Array[GSFeature] = []
 
 
 ## Deserializes the given dictionary into a new [GSDevice] instance.
-static func deserialize(data: Dictionary) -> GSDevice:
+static func deserialize(data: Dictionary, protocol_major: int = 3) -> GSDevice:
+	if protocol_major >= 4:
+		return deserialize_v4(data)
 	var device := GSDevice.new()
 	if data.has(GSMessage.MESSAGE_FIELD_DEVICE_NAME):
 		device.device_name = data[GSMessage.MESSAGE_FIELD_DEVICE_NAME]
@@ -48,6 +50,75 @@ static func deserialize(data: Dictionary) -> GSDevice:
 				feature.device = device
 				device.features.append(feature)
 	return device
+
+
+## Deserializes a v4 DeviceList device, flattening each known context into a GSFeature.
+static func deserialize_v4(data: Dictionary) -> GSDevice:
+	var device := GSDevice.new()
+	device.device_name = str(data.get(GSMessage.MESSAGE_FIELD_DEVICE_NAME, ""))
+	device.device_display_name = str(data.get(GSMessage.MESSAGE_FIELD_DEVICE_DISPLAY_NAME, ""))
+	device.device_index = int(data.get(GSMessage.MESSAGE_FIELD_DEVICE_INDEX, -1))
+	device.device_message_timing_gap = int(data.get(GSMessage.MESSAGE_FIELD_DEVICE_MESSAGE_TIMING_GAP, 0))
+	var raw_features = data.get(GSMessage.MESSAGE_FIELD_DEVICE_FEATURES, {})
+	if not raw_features is Dictionary:
+		return device
+	for feature_key in raw_features.keys():
+		var feature_data = raw_features[feature_key]
+		if not feature_data is Dictionary:
+			continue
+		var feature_index := int(feature_data.get(GSMessage.MESSAGE_FIELD_FEATURE_INDEX, int(feature_key)))
+		var descriptor := str(feature_data.get(
+			GSMessage.MESSAGE_FIELD_FEATURE_DESCRIPTION,
+			feature_data.get(GSMessage.MESSAGE_FIELD_FEATURE_DESCRIPTOR, "")
+		))
+		var outputs = feature_data.get(GSMessage.MESSAGE_FIELD_OUTPUT, {})
+		if outputs is Dictionary:
+			for output_type in outputs.keys():
+				if not GSOutputType.is_known(str(output_type)):
+					push_warning("Skipping unknown v4 output type '%s'." % output_type)
+					continue
+				if not outputs[output_type] is Dictionary:
+					push_warning("Skipping malformed v4 output context '%s'." % output_type)
+					continue
+				var feature := GSFeature.deserialize_v4_output(str(output_type), feature_index, outputs[output_type], descriptor)
+				feature.device = device
+				device.features.append(feature)
+		var inputs = feature_data.get(GSMessage.MESSAGE_FIELD_INPUT, {})
+		if inputs is Dictionary:
+			for input_type in inputs.keys():
+				if not GSInputType.is_known(str(input_type)):
+					push_warning("Skipping unknown v4 input type '%s'." % input_type)
+					continue
+				if not inputs[input_type] is Dictionary:
+					push_warning("Skipping malformed v4 input context '%s'." % input_type)
+					continue
+				var input_feature := GSFeature.deserialize_v4_input(str(input_type), feature_index, inputs[input_type], descriptor)
+				input_feature.device = device
+				device.features.append(input_feature)
+	return device
+
+
+## Updates a retained device without invalidating references held by applications.
+func update_from(other: GSDevice) -> void:
+	device_name = other.device_name
+	device_display_name = other.device_display_name
+	device_index = other.device_index
+	device_message_timing_gap = other.device_message_timing_gap
+	var existing: Dictionary = {}
+	for feature in features:
+		existing[feature.get_capability_key()] = feature
+	var updated: Array[GSFeature] = []
+	for feature in other.features:
+		var key := feature.get_capability_key()
+		if existing.has(key):
+			var retained: GSFeature = existing[key]
+			retained.update_from(feature)
+			retained.device = self
+			updated.append(retained)
+		else:
+			feature.device = self
+			updated.append(feature)
+	features = updated
 
 
 ## Returns the device display name, if set. Otherwise, returns the device name.
@@ -118,6 +189,27 @@ func get_message_rate() -> float:
 	return rate
 
 
+func _find_output(output: String) -> GSFeature:
+	for feature in features:
+		if feature.is_output() and feature.output_type == output:
+			return feature
+	return null
+
+
+func _set_output(output: String, value: float, duration: float = 0.0) -> GSFeature:
+	var feature := _find_output(output)
+	if not feature:
+		return null
+	_send_feature(feature, clampf(value, 0.0, 1.0), duration)
+	return feature
+
+
+func _send_feature(feature: GSFeature, value: float, duration: float = 0.0, clockwise: bool = true) -> void:
+	var client: Variant = GSUtil.get_client()
+	if client:
+		client.send_feature(feature, value, duration, clockwise)
+
+
 ## Attempts to vibrate the device. If no vibrate feature is available this does nothing.
 ## [br][br]
 ## [param intensity] is a value between [code]0.0[/code] and [code]1.0[/code] where [code]0.0[/code] 
@@ -128,7 +220,7 @@ func vibrate(intensity: float = 1.0, duration: float = 0.0) -> GSFeature:
 	var feature: GSFeature = get_feature_by_actuator_type(GSActuatorType.VIBRATE)
 	if not feature:
 		return null
-	GSClient.send_feature(feature, clampf(intensity, 0.0, 1.0), duration)
+	_send_feature(feature, clampf(intensity, 0.0, 1.0), duration)
 	return feature
 
 
@@ -144,7 +236,7 @@ func rotate(speed: float = 1.0, clockwise: bool = true, duration: float = 0.0) -
 	var feature: GSFeature = get_feature_by_actuator_type(GSActuatorType.ROTATE)
 	if not feature:
 		return null
-	GSClient.send_feature(feature, clampf(speed, 0.0, 1.0), duration, clockwise)
+	_send_feature(feature, clampf(speed, 0.0, 1.0), duration, clockwise)
 	return feature
 
 
@@ -158,7 +250,7 @@ func oscillate(intensity: float = 1.0, duration: float = 0.0) -> GSFeature:
 	var feature: GSFeature = get_feature_by_actuator_type(GSActuatorType.OSCILLATE)
 	if not feature:
 		return null
-	GSClient.send_feature(feature, clampf(intensity, 0.0, 1.0), duration)
+	_send_feature(feature, clampf(intensity, 0.0, 1.0), duration)
 	return feature
 
 
@@ -172,7 +264,7 @@ func constrict(strength: float = 1.0, duration: float = 0.0) -> GSFeature:
 	var feature: GSFeature = get_feature_by_actuator_type(GSActuatorType.CONSTRICT)
 	if not feature:
 		return null
-	GSClient.send_feature(feature, clampf(strength, 0.0, 1.0), duration)
+	_send_feature(feature, clampf(strength, 0.0, 1.0), duration)
 	return feature
 
 
@@ -186,28 +278,59 @@ func inflate(strength: float = 1.0, duration: float = 0.0) -> GSFeature:
 	var feature: GSFeature = get_feature_by_actuator_type(GSActuatorType.INFLATE)
 	if not feature:
 		return null
-	GSClient.send_feature(feature, clampf(strength, 0.0, 1.0), duration)
+	_send_feature(feature, clampf(strength, 0.0, 1.0), duration)
+	return feature
+
+
+## Attempts to control a spray output using normalized intensity.
+func spray(intensity: float = 1.0) -> GSFeature:
+	return _set_output(GSOutputType.SPRAY, intensity)
+
+
+## Attempts to set an LED brightness using normalized intensity.
+func set_led(brightness: float = 1.0) -> GSFeature:
+	return _set_output(GSOutputType.LED, brightness)
+
+
+## Attempts to set temperature. Negative values cool, positive values heat.
+func temperature(level: float = 0.0) -> GSFeature:
+	var feature := _find_output(GSOutputType.TEMPERATURE)
+	if not feature:
+		return null
+	level = clampf(level, -1.0, 1.0)
+	var value: float = feature.value_range.y * level if level >= 0.0 else abs(feature.value_range.x) * level
+	var client: Variant = GSUtil.get_client()
+	if client:
+		client.send_output_value(feature, roundi(value))
 	return feature
 
 
 ## Attempts to move the device to the specified position. If no position feature is available this 
 ## does nothing.
 ## [br][br]
-## [param duration] sets the duration, in seconds, that it should take for the device to reach the 
+## [param duration] sets the duration, in seconds, that it should take for the device to reach the
 ## specified [param position].
 ## [br]
 ## [param position] is a value between [code]0.0[/code] and [code]1.0[/code] where [code]0.0[/code] 
 ## is the lowest position the device can reach and [code]1.0[/code] is the highest position.
 ## [br][br]
-## Due to the duration required to move the device this method is asyc and can be awaited on.
+## Due to the duration required to move the device this method is async and can be awaited on.
 func position(duration: float, position: float) -> GSFeature:
-	var feature: GSFeature = get_feature_by_actuator_type(GSActuatorType.POSITION)
+	var feature: GSFeature = _find_output(GSOutputType.HW_POSITION_WITH_DURATION)
+	if not feature:
+		feature = _find_output(GSOutputType.POSITION)
+	if not feature:
+		feature = get_feature_by_actuator_type(GSActuatorType.POSITION)
 	if not feature:
 		return null
-	await GSClient.send_feature(feature, clampf(position, 0.0, 1.0), duration)
+	var client: Variant = GSUtil.get_client()
+	if client:
+		await client.send_feature(feature, clampf(position, 0.0, 1.0), duration)
 	return feature
 
 
 ## Stops all active features on this device.
 func stop() -> void:
-	GSClient.stop_device(device_index)
+	var client: Variant = GSUtil.get_client()
+	if client:
+		client.stop_device(device_index)

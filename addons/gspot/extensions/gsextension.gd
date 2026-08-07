@@ -20,10 +20,10 @@ func get_extension_priority() -> int:
 
 ## Loads the extension, allowing the developer to do any necessary setup. Returns 
 ## [code]false[/code] if loading failed for any reason and the extension will not be available.
-func load_extension(gsclient: GSClient) -> bool:
+func load_extension(gsclient: Node) -> bool:
 	return true
 
 
 ## Unloads the extension, allowing the developer to do any necessary cleanup.
-func unload_extension(gsclient: GSClient) -> void:
+func unload_extension(gsclient: Node) -> void:
 	pass

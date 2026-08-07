@@ -27,11 +27,18 @@ const MESSAGE_TYPE_RAW_READ_CMD: String = "RawReadCmd"
 const MESSAGE_TYPE_RAW_READING: String = "RawReading"
 const MESSAGE_TYPE_RAW_SUBSCRIBE_CMD: String = "RawSubscribeCmd"
 const MESSAGE_TYPE_RAW_UNSUBSCRIBE_CMD: String = "RawUnsubscribeCmd"
+const MESSAGE_TYPE_OUTPUT_CMD: String = "OutputCmd"
+const MESSAGE_TYPE_INPUT_CMD: String = "InputCmd"
+const MESSAGE_TYPE_INPUT_READING: String = "InputReading"
+const MESSAGE_TYPE_STOP_CMD: String = "StopCmd"
+const MESSAGE_TYPE_DISCONNECT: String = "Disconnect"
 const MESSAGE_FIELD_ID: String = "Id"
 const MESSAGE_FIELD_ERROR_MESSAGE: String = "ErrorMessage"
 const MESSAGE_FIELD_ERROR_CODE: String = "ErrorCode"
 const MESSAGE_FIELD_CLIENT_NAME: String = "ClientName"
 const MESSAGE_FIELD_MESSAGE_VERSION: String = "MessageVersion"
+const MESSAGE_FIELD_PROTOCOL_VERSION_MAJOR: String = "ProtocolVersionMajor"
+const MESSAGE_FIELD_PROTOCOL_VERSION_MINOR: String = "ProtocolVersionMinor"
 const MESSAGE_FIELD_SERVER_NAME: String = "ServerName"
 const MESSAGE_FIELD_MAX_PING_TIME: String = "MaxPingTime"
 const MESSAGE_FIELD_DEVICES: String = "Devices"
@@ -40,7 +47,11 @@ const MESSAGE_FIELD_DEVICE_INDEX: String = "DeviceIndex"
 const MESSAGE_FIELD_DEVICE_MESSAGE_TIMING_GAP: String = "DeviceMessageTimingGap"
 const MESSAGE_FIELD_DEVICE_DISPLAY_NAME: String = "DeviceDisplayName"
 const MESSAGE_FIELD_DEVICE_MESSAGES: String = "DeviceMessages"
+const MESSAGE_FIELD_DEVICE_FEATURES: String = "DeviceFeatures"
 const MESSAGE_FIELD_FEATURE_DESCRIPTOR: String = "FeatureDescriptor"
+## v4 renamed the feature descriptor field to FeatureDescription.
+const MESSAGE_FIELD_FEATURE_DESCRIPTION: String = "FeatureDescription"
+const MESSAGE_FIELD_FEATURE_INDEX: String = "FeatureIndex"
 const MESSAGE_FIELD_STEP_COUNT: String = "StepCount"
 const MESSAGE_FIELD_ACTUATOR_TYPE: String = "ActuatorType"
 const MESSAGE_FIELD_SENSOR_TYPE: String = "SensorType"
@@ -61,6 +72,15 @@ const MESSAGE_FIELD_ENDPOINT: String = "Endpoint"
 const MESSAGE_FIELD_WRITE_WITH_RESPONSE: String = "WriteWithResponse"
 const MESSAGE_FIELD_EXPECTED_LENGTH: String = "ExpectedLength"
 const MESSAGE_FIELD_WAIT_FOR_DATA: String = "WaitForData"
+const MESSAGE_FIELD_OUTPUT: String = "Output"
+const MESSAGE_FIELD_INPUT: String = "Input"
+const MESSAGE_FIELD_COMMAND: String = "Command"
+const MESSAGE_FIELD_TYPE: String = "Type"
+const MESSAGE_FIELD_READING: String = "Reading"
+const MESSAGE_FIELD_VALUE: String = "Value"
+const MESSAGE_FIELD_DURATION_RANGE: String = "Duration"
+const MESSAGE_FIELD_INPUTS: String = "Inputs"
+const MESSAGE_FIELD_OUTPUTS: String = "Outputs"
 const SENSOR_TYPE_BATTERY: String = "Battery"
 
 var message_type: String
@@ -72,8 +92,12 @@ func _init(message_id: int = 0) -> void:
 
 
 static func deserialize(data: Dictionary) -> GSMessage:
+	if data.is_empty():
+		return null
 	var message := GSMessage.new()
 	message.message_type = data.keys().front()
+	if not data[message.message_type] is Dictionary:
+		return null
 	message.fields = data[message.message_type]
 	return message
 

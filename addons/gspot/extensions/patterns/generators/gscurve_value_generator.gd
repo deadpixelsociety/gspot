@@ -10,7 +10,10 @@ func generate_values() -> void:
 		_tween.kill()
 	if duration <= 0.0 or not curve:
 		return
-	_tween = GSClient.create_tween()
+	var client: Variant = GSUtil.get_client()
+	if not client:
+		return
+	_tween = client.create_tween()
 	_tween.tween_method(_generate_value, 0.0, 1.0, duration)
 	await _tween.finished
 	generator_finished.emit(self)

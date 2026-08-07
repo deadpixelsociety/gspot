@@ -12,6 +12,14 @@ static func get_project_value(property: String, default = null):
 	return value
 
 
+## Resolves the client autoload without requiring its global identifier during script parsing.
+static func get_client():
+	var main_loop := Engine.get_main_loop()
+	if main_loop is SceneTree:
+		return (main_loop as SceneTree).root.get_node_or_null("GSClient")
+	return null
+
+
 ## Determines if the given object is valid. Checks for nullability, instance validity, and if it has 
 ## been queued for deletion.
 static func is_valid(obj) -> bool:

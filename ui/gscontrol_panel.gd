@@ -234,7 +234,7 @@ func _add_rotations(device: GSDevice):
 func _add_sensors(device: GSDevice):
 	_clear_container(_sensor_container)
 	for feature in device.features:
-		if feature.feature_command == GSMessage.MESSAGE_TYPE_SENSOR_READ_CMD:
+		if feature.is_input():
 			var sensor = SENSOR_CONTROL.instantiate() as GSSensorControl
 			sensor.device = device
 			sensor.feature = feature

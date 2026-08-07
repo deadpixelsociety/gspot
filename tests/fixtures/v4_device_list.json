@@ -1,0 +1,59 @@
+[
+  {
+    "DeviceList": {
+      "Id": 0,
+      "Devices": {
+        "0": {
+          "DeviceName": "Test Vibrator",
+          "DeviceIndex": 0,
+          "DeviceMessageTimingGap": 20,
+          "DeviceFeatures": {
+            "0": {
+              "FeatureIndex": 0,
+              "FeatureDescription": "Vibrator",
+              "Output": { "Vibrate": { "Value": [0, 20] } }
+            },
+            "1": {
+              "FeatureIndex": 1,
+              "FeatureDescription": "Battery",
+              "Input": {
+                "Battery": {
+                  "Value": [[0, 100]],
+                  "Command": ["Read", "Subscribe", "Unsubscribe"]
+                }
+              }
+            }
+          }
+        },
+        "1": {
+          "DeviceName": "Test Stroker",
+          "DeviceIndex": 1,
+          "DeviceMessageTimingGap": 100,
+          "DeviceFeatures": {
+            "0": {
+              "FeatureIndex": 0,
+              "FeatureDescription": "Stroker",
+              "Output": {
+                "HwPositionWithDuration": {
+                  "Value": [0, 100],
+                  "Duration": [0, 100000]
+                },
+                "Position": { "Value": [0, 100] }
+              }
+            },
+            "1": {
+              "FeatureIndex": 1,
+              "FeatureDescription": "Button",
+              "Input": {
+                "Button": {
+                  "Value": [[0, 1]],
+                  "Command": ["Subscribe"]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+]

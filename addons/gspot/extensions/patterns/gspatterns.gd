@@ -161,7 +161,9 @@ func play(
 ) -> GSActivePattern:
 	var pattern: GSPattern = get_pattern(pattern_name)
 	if not pattern:
-		GSClient.logw("Pattern %s not found." % pattern_name)
+		var warning_client: Variant = GSUtil.get_client()
+		if warning_client:
+			warning_client.logw("Pattern %s not found." % pattern_name)
 		return null
 	var parent: GSActivePattern = null
 	var active: GSActivePattern = get_active_pattern_by_feature(feature)
@@ -191,7 +193,9 @@ func play(
 	)
 	
 	_active_patterns.append(active)
-	GSClient.add_child(active)
+	var client: Variant = GSUtil.get_client()
+	if client:
+		client.add_child(active)
 	
 	return active
 

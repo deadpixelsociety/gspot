@@ -21,16 +21,10 @@ func _ready() -> void:
 
 
 func _setup_buttons():
-	if feature.feature_command.begins_with("SensorSubscribe"):
-		_subscribe.visible = true
-		_unsubscribe.visible = true
-		_label4.visible = false
-		_read_sensor.visible = false
-	else:
-		_subscribe.visible = false
-		_unsubscribe.visible = false
-		_label4.visible = true
-		_read_sensor.visible = true
+	_subscribe.visible = feature.can_subscribe()
+	_unsubscribe.visible = feature.can_subscribe()
+	_read_sensor.visible = feature.can_read()
+	_label4.visible = feature.can_read()
 
 
 func _on_read_sensor_pressed() -> void:
