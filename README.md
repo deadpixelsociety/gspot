@@ -1,5 +1,7 @@
 # gspot
 
+![gspot logo](logo.png) 
+
 gspot is a Godot 4 plugin for controlling intimate haptic devices through the [Buttplug protocol](https://buttplug.io/docs/spec/). A compatible server is required. [Intiface Central](https://intiface.com/central/) is the recommended local server and normally listens on `127.0.0.1:12345`.
 
 The 3.0 plugin uses Buttplug protocol v4 by default and retains protocol v3 compatibility.
