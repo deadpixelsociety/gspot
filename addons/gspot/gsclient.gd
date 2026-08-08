@@ -113,7 +113,6 @@ var _protocol_handler: GSProtocolHandler
 var _protocol_mode_override: int = -1
 var _fallback_attempted: bool = false
 var _connect_options: TLSOptions
-var _disconnect_requested: bool = false
 
 
 func _init() -> void:
@@ -282,7 +281,6 @@ func start(
 	_port = port
 	_connect_options = options
 	_fallback_attempted = false
-	_disconnect_requested = false
 	_protocol_handler = _create_protocol_handler()
 	_timeout = float(timeout)
 	var resp: Error = _connect_transport()
@@ -298,10 +296,7 @@ func start(
 
 ## Stops the client and disconnects from a connected server.
 func stop() -> void:
-	if is_client_connected() and _protocol_handler and _protocol_handler.get_major_version() >= 4:
-		_disconnect_requested = true
-		send(_protocol_handler.create_disconnect(_get_message_id()))
-	else:
+	if _peer.get_ready_state() != WebSocketPeer.STATE_CLOSED:
 		_peer.close(1000, "Client requested shutdown.")
 	logv("%s stopping..." % get_client_string())
 
@@ -557,6 +552,13 @@ func stop_feature(feature: GSFeature) -> void:
 			if unsubscribe:
 				send(unsubscribe)
 		return
+	if (
+		_protocol_handler.get_major_version() >= 4
+		and feature.output_type in [GSOutputType.POSITION, GSOutputType.HW_POSITION_WITH_DURATION]
+	):
+		# v4 position commands are expected to finish their movement and have no
+		# feature-scoped stop operation. Device-wide StopCmd remains available.
+		return
 	if _protocol_handler.get_major_version() < 4:
 		if feature.feature_command in [GSMessage.MESSAGE_TYPE_SCALAR_CMD, GSMessage.MESSAGE_TYPE_ROTATE_CMD]:
 			var legacy_stop := _protocol_handler.create_output(_get_message_id(), feature, 0.0, 0, true)
@@ -774,8 +776,6 @@ func _consume_peer_packets() -> void:
 
 func _on_message_ok(message: GSMessage) -> void:
 	_ack(message.get_id())
-	if _disconnect_requested:
-		_peer.close(1000, "Client requested shutdown.")
 
 
 func _on_message_error(message: GSMessage) -> void:
@@ -931,7 +931,6 @@ func _reset() -> void:
 	_protocol_version_minor = 0
 	_max_ping_time = 0
 	_protocol_handler = null
-	_disconnect_requested = false
 	_state = ClientState.DISCONNECTED
 
 

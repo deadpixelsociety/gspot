@@ -41,6 +41,7 @@ func create_input(message_id: int, feature: GSFeature, command: String) -> GSMes
 func create_stop(message_id: int, device_index: Variant = null, feature_index: Variant = null, inputs: bool = true, outputs: bool = true) -> GSMessage:
 	return null
 
+## Creates the v4 graceful disconnect message for transports without an inherent close operation.
 func create_disconnect(message_id: int) -> GSMessage:
 	return null
 

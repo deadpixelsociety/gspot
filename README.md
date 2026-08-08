@@ -90,7 +90,7 @@ Readings are available through `feature.sensor_value_read(feature, data)` or the
 
 ## Stop and error handling
 
-Use `GSClient.stop_feature(feature)`, `GSClient.stop_device(device_index)`, or `GSClient.stop_all_devices()` for explicit stops. `GSClient.stop()` sends v4 `Disconnect` and closes the transport after the server acknowledges it.
+Use `GSClient.stop_feature(feature)`, `GSClient.stop_device(device_index)`, or `GSClient.stop_all_devices()` for explicit stops. `GSClient.stop()` closes the WebSocket transport directly so it works with current Intiface schemas. The server cleans up the session and devices when the transport closes. The v4 `Disconnect` serializer remains available for non-WebSocket transports.
 
 Use `client_message` for log output, `client_error` for local errors, and `server_error` for protocol errors. Set verbosity with `GSClient.set_log_level(GSClient.LogLevel.DEBUG)`.
 

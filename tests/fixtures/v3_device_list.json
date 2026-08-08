@@ -1,28 +1,28 @@
 [
   {
-    "DeviceList": {
-      "Id": 1,
-      "Devices": [
-        {
-          "DeviceName": "Legacy Vibrator",
-          "DeviceIndex": 0,
-          "DeviceMessageTimingGap": 20,
-          "DeviceMessages": {
-            "ScalarCmd": [
-              {
-                "FeatureDescriptor": "Vibrator",
-                "StepCount": 20,
-                "ActuatorType": "Vibrate"
-              }
-            ],
-            "SensorReadCmd": {
-              "FeatureDescriptor": "Battery",
-              "SensorType": "Battery",
-              "SensorRange": [[0, 100]]
-            }
-          }
-        }
-      ]
-    }
+	"DeviceList": {
+	  "Id": 1,
+	  "Devices": [
+		{
+		  "DeviceName": "Legacy Vibrator",
+		  "DeviceIndex": 0,
+		  "DeviceMessageTimingGap": 20,
+		  "DeviceMessages": {
+			"ScalarCmd": [
+			  {
+				"FeatureDescriptor": "Vibrator",
+				"StepCount": 20,
+				"ActuatorType": "Vibrate"
+			  }
+			],
+			"SensorReadCmd": {
+			  "FeatureDescriptor": "Battery",
+			  "SensorType": "Battery",
+			  "SensorRange": [[0, 100]]
+			}
+		  }
+		}
+	  ]
+	}
   }
 ]

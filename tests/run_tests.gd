@@ -34,6 +34,7 @@ func _run_tests() -> void:
 	_test_duration_conversion()
 	_test_protocol_modes()
 	_test_v4_messages()
+	_test_v4_capability_wire_types()
 	if failures.is_empty():
 		print("gspot protocol tests passed")
 	else:
@@ -167,6 +168,76 @@ func _test_v4_messages() -> void:
 	var all_stop := GSProtocolV4.new().create_stop(7)
 	_check(not all_stop.fields.has(GSMessage.MESSAGE_FIELD_DEVICE_INDEX), "v4 all-device stop should omit device scope")
 	_check(GSProtocolV4.new().create_disconnect(8).message_type == GSMessage.MESSAGE_TYPE_DISCONNECT, "v4 disconnect should use the graceful Disconnect message")
+
+
+func _test_v4_capability_wire_types() -> void:
+	var protocol := GSProtocolV4.new()
+	var device := GSDevice.new()
+	device.device_index = 4
+	var output_ranges := {
+		GSOutputType.VIBRATE: Vector2i(0, 20),
+		GSOutputType.ROTATE: Vector2i(-20, 20),
+		GSOutputType.OSCILLATE: Vector2i(0, 10),
+		GSOutputType.CONSTRICT: Vector2i(0, 10),
+		GSOutputType.SPRAY: Vector2i(0, 5),
+		GSOutputType.TEMPERATURE: Vector2i(-4, 6),
+		GSOutputType.LED: Vector2i(0, 100),
+		GSOutputType.POSITION: Vector2i(0, 100),
+		GSOutputType.HW_POSITION_WITH_DURATION: Vector2i(0, 100),
+	}
+	var feature_index := 0
+	for output_type in output_ranges.keys():
+		var output_range: Vector2i = output_ranges[output_type]
+		var feature := GSFeature.deserialize_v4_output(
+			str(output_type), feature_index, {"Value": [output_range.x, output_range.y]}, str(output_type)
+		)
+		feature.device = device
+		var message := protocol.create_output(20 + feature_index, feature, 0.5, 1234, true)
+		_check(message != null and message.message_type == GSMessage.MESSAGE_TYPE_OUTPUT_CMD, "%s should serialize as OutputCmd" % output_type)
+		var command: Dictionary = message.fields[GSMessage.MESSAGE_FIELD_COMMAND][output_type]
+		var expected := roundi(lerpf(float(output_range.x), float(output_range.y), 0.5))
+		if output_type == GSOutputType.ROTATE:
+			expected = 10
+		_check(command[GSMessage.MESSAGE_FIELD_VALUE] == expected, "%s should map normalized values through its advertised range" % output_type)
+		if output_type == GSOutputType.HW_POSITION_WITH_DURATION:
+			_check(command[GSMessage.MESSAGE_FIELD_DURATION] == 1234, "hardware position should include duration in milliseconds")
+		else:
+			_check(not command.has(GSMessage.MESSAGE_FIELD_DURATION), "%s should not include a duration field" % output_type)
+		feature_index += 1
+
+	var signed_temperature := GSFeature.deserialize_v4_output(
+		GSOutputType.TEMPERATURE, 20, {"Value": [-20, 20]}, "Temperature"
+	)
+	signed_temperature.device = device
+	var cooling := protocol.create_output_value(40, signed_temperature, -10, 0)
+	_check(
+		cooling.fields[GSMessage.MESSAGE_FIELD_COMMAND][GSOutputType.TEMPERATURE][GSMessage.MESSAGE_FIELD_VALUE] == -10,
+		"signed temperature values should be sent unchanged"
+	)
+
+	var input_values := {
+		GSInputType.BATTERY: 75,
+		GSInputType.RSSI: -53,
+		GSInputType.PRESSURE: 1252,
+		GSInputType.BUTTON: 1,
+	}
+	var input_index := 30
+	for input_type in input_values.keys():
+		var input_feature := GSFeature.deserialize_v4_input(
+			str(input_type), input_index, {"Command": ["Read", "Subscribe", "Unsubscribe"]}, str(input_type)
+		)
+		input_feature.device = device
+		for command_name in ["Read", "Subscribe", "Unsubscribe"]:
+			var input_message := protocol.create_input(60 + input_index, input_feature, command_name)
+			_check(input_message != null and input_message.fields[GSMessage.MESSAGE_FIELD_TYPE] == input_type, "%s %s should serialize as InputCmd" % [input_type, command_name])
+		var reading := protocol.parse_input_reading({
+			"Id": input_index,
+			"DeviceIndex": device.device_index,
+			"FeatureIndex": input_index,
+			"Reading": {input_type: {"Value": input_values[input_type]}},
+		})
+		_check(reading["input_type"] == input_type and reading["data"][0] == input_values[input_type], "%s readings should retain their signed integer value" % input_type)
+		input_index += 1
 
 
 func _check(condition: bool, message: String) -> void:

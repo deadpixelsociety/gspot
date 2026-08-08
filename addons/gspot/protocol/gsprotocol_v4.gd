@@ -72,6 +72,7 @@ func create_stop(message_id: int, device_index: Variant = null, feature_index: V
 		fields[GSMessage.MESSAGE_FIELD_FEATURE_INDEX] = int(feature_index)
 	return _message(GSMessage.MESSAGE_TYPE_STOP_CMD, message_id, fields)
 
+## Creates the v4 graceful disconnect message for non-WebSocket transports.
 func create_disconnect(message_id: int) -> GSMessage:
 	return _message(GSMessage.MESSAGE_TYPE_DISCONNECT, message_id)
 

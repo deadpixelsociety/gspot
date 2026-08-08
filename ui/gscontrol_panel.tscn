@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://prwyw8cdhaos"]
+[gd_scene format=3 uid="uid://prwyw8cdhaos"]
 
 [ext_resource type="Script" uid="uid://eyskt8fj50n8" path="res://ui/gscontrol_panel.gd" id="1_ahhjr"]
 [ext_resource type="Theme" uid="uid://cnuol0ry2vobn" path="res://assets/gspot_theme.tres" id="1_oj7qg"]
@@ -11,7 +11,7 @@ shadow_size = 4
 shadow_color = Color(0, 0, 0, 0.25098)
 shadow_offset = Vector2(4, 4)
 
-[node name="GSControlPanel" type="PanelContainer"]
+[node name="GSControlPanel" type="PanelContainer" unique_id=1935394033]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -20,18 +20,18 @@ grow_vertical = 2
 theme = ExtResource("1_oj7qg")
 script = ExtResource("1_ahhjr")
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=193226873]
 layout_mode = 2
 theme_override_constants/margin_left = 32
 theme_override_constants/margin_top = 32
 theme_override_constants/margin_right = 32
 theme_override_constants/margin_bottom = 32
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=1326497335]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="Title" type="Label" parent="MarginContainer/VBoxContainer" unique_id=417914159]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
@@ -40,17 +40,17 @@ label_settings = SubResource("LabelSettings_qplhf")
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ServerConnection" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="ServerConnection" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=34342465]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/ServerConnection"]
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/ServerConnection" unique_id=473694850]
 layout_mode = 2
 text = "Server"
 label_settings = ExtResource("4_71pte")
 vertical_alignment = 1
 
-[node name="Hostname" type="LineEdit" parent="MarginContainer/VBoxContainer/ServerConnection"]
+[node name="Hostname" type="LineEdit" parent="MarginContainer/VBoxContainer/ServerConnection" unique_id=1713617884]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(256, 0)
 layout_mode = 2
@@ -58,140 +58,140 @@ text = "127.0.0.1"
 placeholder_text = "Hostname"
 select_all_on_focus = true
 
-[node name="Label2" type="Label" parent="MarginContainer/VBoxContainer/ServerConnection"]
+[node name="Label2" type="Label" parent="MarginContainer/VBoxContainer/ServerConnection" unique_id=1908257005]
 layout_mode = 2
 text = ":"
 label_settings = ExtResource("4_71pte")
 vertical_alignment = 1
 
-[node name="Port" type="SpinBox" parent="MarginContainer/VBoxContainer/ServerConnection"]
+[node name="Port" type="SpinBox" parent="MarginContainer/VBoxContainer/ServerConnection" unique_id=382287832]
 unique_name_in_owner = true
 layout_mode = 2
 max_value = 65536.0
 value = 12345.0
 
-[node name="Connect" type="Button" parent="MarginContainer/VBoxContainer/ServerConnection"]
+[node name="Connect" type="Button" parent="MarginContainer/VBoxContainer/ServerConnection" unique_id=1418965196]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
 text = "Connect"
 
-[node name="Disconnect" type="Button" parent="MarginContainer/VBoxContainer/ServerConnection"]
+[node name="Disconnect" type="Button" parent="MarginContainer/VBoxContainer/ServerConnection" unique_id=609504372]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
 text = "Disconnect"
 
-[node name="Open Pattern Editor" type="Button" parent="MarginContainer/VBoxContainer/ServerConnection"]
+[node name="Open Pattern Editor" type="Button" parent="MarginContainer/VBoxContainer/ServerConnection" unique_id=1349144133]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
 text = "Open Pattern Editor"
 
-[node name="DeviceControl" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="DeviceControl" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=1661105071]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="RequestDeviceList" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl"]
+[node name="RequestDeviceList" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl" unique_id=623135198]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
 disabled = true
 text = "Request Device List"
 
-[node name="StartScan" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl"]
+[node name="StartScan" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl" unique_id=2129536006]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
 disabled = true
 text = "Start Scan"
 
-[node name="StopScan" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl"]
+[node name="StopScan" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl" unique_id=1349362487]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
 disabled = true
 text = "Stop Scan"
 
-[node name="StopDevice" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl"]
+[node name="StopDevice" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl" unique_id=671895335]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
 disabled = true
 text = "Stop Device"
 
-[node name="StopAllDevices" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl"]
+[node name="StopAllDevices" type="Button" parent="MarginContainer/VBoxContainer/DeviceControl" unique_id=1206456775]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
 disabled = true
 text = "Stop All Devices"
 
-[node name="DeviceContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="DeviceContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=1411365924]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 32
 
-[node name="DeviceList" type="ItemList" parent="MarginContainer/VBoxContainer/DeviceContainer"]
+[node name="DeviceList" type="ItemList" parent="MarginContainer/VBoxContainer/DeviceContainer" unique_id=946686589]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ScalarScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer/DeviceContainer"]
+[node name="ScalarScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer/DeviceContainer" unique_id=588481021]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ScalarContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/DeviceContainer/ScalarScroll"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_constants/separation = 16
-
-[node name="LinearScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer/DeviceContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="LinearContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/DeviceContainer/LinearScroll"]
+[node name="ScalarContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/DeviceContainer/ScalarScroll" unique_id=2108939093]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 16
 
-[node name="RotationScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer/DeviceContainer"]
+[node name="LinearScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer/DeviceContainer" unique_id=977876031]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="RotationContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/DeviceContainer/RotationScroll"]
+[node name="LinearContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/DeviceContainer/LinearScroll" unique_id=766899458]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 16
 
-[node name="SensorScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer/DeviceContainer"]
+[node name="RotationScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer/DeviceContainer" unique_id=969381473]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="SensorContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/DeviceContainer/SensorScroll"]
+[node name="RotationContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/DeviceContainer/RotationScroll" unique_id=1172182105]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="SensorScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer/DeviceContainer" unique_id=336671780]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SensorContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/DeviceContainer/SensorScroll" unique_id=595049600]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="LogLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="LogLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=579259997]
 layout_mode = 2
 text = "Client Log"
 label_settings = ExtResource("4_71pte")
 vertical_alignment = 1
 
-[node name="Log" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+[node name="Log" type="RichTextLabel" parent="MarginContainer/VBoxContainer" unique_id=113815922]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 200)
 layout_mode = 2
@@ -199,7 +199,7 @@ size_flags_vertical = 8
 bbcode_enabled = true
 scroll_following = true
 
-[node name="PatternEditorWindow" type="Window" parent="."]
+[node name="PatternEditorWindow" type="Window" parent="." unique_id=259665416]
 unique_name_in_owner = true
 title = "Pattern Editor"
 initial_position = 4
@@ -207,7 +207,7 @@ size = Vector2i(1280, 720)
 visible = false
 theme = ExtResource("1_oj7qg")
 
-[node name="PatternEditor" parent="PatternEditorWindow" instance=ExtResource("4_e4s7h")]
+[node name="PatternEditor" parent="PatternEditorWindow" unique_id=550175970 instance=ExtResource("4_e4s7h")]
 
 [connection signal="pressed" from="MarginContainer/VBoxContainer/ServerConnection/Connect" to="." method="_on_connect_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/ServerConnection/Disconnect" to="." method="_on_disconnect_pressed"]
